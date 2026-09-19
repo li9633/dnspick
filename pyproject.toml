@@ -1,0 +1,50 @@
+[project]
+name = "dnspick"
+version = "0.1.0"
+description = "DNS -> IP -> 链路 两段式测量器：找出最适合你家网络的 DNS 上游"
+readme = "README.md"
+requires-python = ">=3.13.7"
+license = { text = "MIT" }
+authors = [{ name = "dnspick" }]
+
+# 运行时依赖只放跨平台的必需品，PySide6 走 dependency-groups（见下），
+# 这样在 OpenWrt / 无显示环境上不会被迫拉一个 600MB 的 GUI 栈。
+dependencies = [
+    "dnspython[doh,idna]>=2.7",
+    "typer>=0.12",
+    "rich>=13.0",
+]
+
+[project.optional-dependencies]
+geoip = ["maxminddb>=2.6"]
+
+[project.scripts]
+dnspick = "dnspick.cli:app"
+dnspick-gui = "dnspick.gui.app:main"
+
+# 本地开发/运行用的分组。uv 的 default-groups 让 `uv sync` 一次装齐，
+# 这些分组不会进入分发元数据，因此不会污染 OpenWrt 上的安装。
+[dependency-groups]
+gui = ["pyside6>=6.9"]
+dev = ["pytest>=8", "ruff>=0.6", "mypy>=1.11"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dnspick"]
+
+[tool.uv]
+default-groups = ["gui", "dev"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["B008", "UP041", "UP042"]  # str+Enum 与 asyncio.TimeoutError 是刻意的兼容性写法
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
