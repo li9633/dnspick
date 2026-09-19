@@ -1,0 +1,26 @@
+# 自定义 DNS 清单示例（放在这里会被合并到内置清单前面）
+# 用法：dnspick run --servers resources/servers.toml
+# 加 enabled_only = true 则只测本文件列出的服务器
+
+# enabled_only = false
+
+[[server]]
+id = "my-isp"
+name = "运营商 DNS"
+address = "192.168.1.1"
+protocol = "udp"
+region = "cn"
+
+[[server]]
+id = "smartdns-local"
+name = "家里 SmartDNS"
+address = "192.168.1.53"
+protocol = "udp"
+region = "cn"
+
+[[server]]
+id = "cf-doh-h3"
+name = "Cloudflare DoH"
+address = "https://cloudflare-dns.com/dns-query"
+protocol = "doh"
+region = "global"

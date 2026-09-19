@@ -1,0 +1,6867 @@
+# dnspick 域名集（由 dnspick discover 生成）
+#
+# tier 说明：
+#   1 = 核心层，默认只跑这层 —— CDN 调度最敏感 + 你最常访问的站点
+#   2 = 常用层，想看更全面的国内外表现时加 --tier 2
+#   3 = 长尾层，对评分基本没有区分度，默认不跑
+#
+# group 只有 cn / global 两种取值，决定计入哪个分组。
+
+[[domain]]
+name = "laowang.vip"
+group = "cn"
+tier = 1
+note = "访问 566 次"
+
+[[domain]]
+name = "gold.local"
+group = "cn"
+tier = 1
+note = "访问 348 次"
+
+[[domain]]
+name = "pan.baidu.com"
+group = "cn"
+tier = 1
+note = "访问 160 次"
+
+[[domain]]
+name = "www.google.com"
+group = "cn"
+tier = 1
+note = "访问 156 次"
+
+[[domain]]
+name = "github.com"
+group = "cn"
+tier = 1
+note = "访问 104 次"
+
+[[domain]]
+name = "yuanbao.tencent.com"
+group = "cn"
+tier = 1
+note = "访问 92 次"
+
+[[domain]]
+name = "www.google.com.hk"
+group = "cn"
+tier = 1
+note = "访问 89 次"
+
+[[domain]]
+name = "assets.chapturist.com"
+group = "cn"
+tier = 1
+note = "访问 74 次"
+
+[[domain]]
+name = "mypikpak.com"
+group = "cn"
+tier = 1
+note = "访问 61 次"
+
+[[domain]]
+name = "matching-jp.com"
+group = "cn"
+tier = 1
+note = "访问 46 次"
+
+[[domain]]
+name = "x.com"
+group = "cn"
+tier = 1
+note = "访问 46 次"
+
+[[domain]]
+name = "uv.oaix.tech"
+group = "cn"
+tier = 1
+note = "访问 40 次"
+
+[[domain]]
+name = "pan.quark.cn"
+group = "cn"
+tier = 1
+note = "访问 31 次"
+
+[[domain]]
+name = "outlook.live.com"
+group = "cn"
+tier = 1
+note = "访问 29 次"
+
+[[domain]]
+name = "pymumu.github.io"
+group = "cn"
+tier = 1
+note = "访问 25 次"
+
+[[domain]]
+name = "legendvps.com"
+group = "cn"
+tier = 1
+note = "访问 22 次"
+
+[[domain]]
+name = "xn--9kqy92aw5h.net"
+group = "cn"
+tier = 1
+note = "访问 19 次"
+
+[[domain]]
+name = "avgood.com"
+group = "cn"
+tier = 1
+note = "访问 18 次"
+
+[[domain]]
+name = "bwgyh.com"
+group = "cn"
+tier = 1
+note = "访问 18 次"
+
+[[domain]]
+name = "wx.mail.qq.com"
+group = "cn"
+tier = 1
+note = "访问 18 次"
+
+[[domain]]
+name = "chatgpt.com"
+group = "cn"
+tier = 1
+note = "访问 17 次"
+
+[[domain]]
+name = "91porn.com"
+group = "cn"
+tier = 1
+note = "访问 16 次"
+
+[[domain]]
+name = "www.jxporn.net"
+group = "cn"
+tier = 1
+note = "访问 16 次"
+
+[[domain]]
+name = "18comic.vip"
+group = "cn"
+tier = 1
+note = "访问 14 次"
+
+[[domain]]
+name = "www.bilibili.com"
+group = "cn"
+tier = 1
+note = "访问 14 次"
+
+[[domain]]
+name = "swasnext.console.aliyun.com"
+group = "cn"
+tier = 1
+note = "访问 13 次"
+
+[[domain]]
+name = "cloud.hosthatch.com"
+group = "cn"
+tier = 1
+note = "访问 12 次"
+
+[[domain]]
+name = "cn.bing.com"
+group = "cn"
+tier = 1
+note = "访问 12 次"
+
+[[domain]]
+name = "charge.local"
+group = "cn"
+tier = 1
+note = "访问 11 次"
+
+[[domain]]
+name = "my.racknerd.com"
+group = "cn"
+tier = 1
+note = "访问 11 次"
+
+[[domain]]
+name = "gofrp.org"
+group = "cn"
+tier = 1
+note = "访问 10 次"
+
+[[domain]]
+name = "members.hhost.com"
+group = "cn"
+tier = 1
+note = "访问 10 次"
+
+[[domain]]
+name = "google.com"
+group = "cn"
+tier = 1
+note = "访问 9 次"
+
+[[domain]]
+name = "h5d.zks02.cc"
+group = "cn"
+tier = 1
+note = "访问 8 次"
+
+[[domain]]
+name = "myaccount.google.com"
+group = "cn"
+tier = 1
+note = "访问 8 次"
+
+[[domain]]
+name = "s.sskoo.com"
+group = "cn"
+tier = 1
+note = "访问 8 次"
+
+[[domain]]
+name = "www.cfzhushou.com"
+group = "cn"
+tier = 1
+note = "访问 8 次"
+
+[[domain]]
+name = "cfhd.cc"
+group = "cn"
+tier = 1
+note = "访问 7 次"
+
+[[domain]]
+name = "graph.qq.com"
+group = "cn"
+tier = 1
+note = "访问 7 次"
+
+[[domain]]
+name = "h5c.zks01.cc"
+group = "cn"
+tier = 1
+note = "访问 7 次"
+
+[[domain]]
+name = "ip138.com"
+group = "cn"
+tier = 1
+note = "访问 7 次"
+
+[[domain]]
+name = "learn.microsoft.com"
+group = "cn"
+tier = 1
+note = "访问 7 次"
+
+[[domain]]
+name = "uuyc.163.com"
+group = "cn"
+tier = 1
+note = "访问 7 次"
+
+[[domain]]
+name = "www.qqres.com"
+group = "cn"
+tier = 1
+note = "访问 7 次"
+
+[[domain]]
+name = "auth.openai.com"
+group = "cn"
+tier = 1
+note = "访问 6 次"
+
+[[domain]]
+name = "fanyi.baidu.com"
+group = "cn"
+tier = 1
+note = "访问 6 次"
+
+[[domain]]
+name = "login.live.com"
+group = "cn"
+tier = 1
+note = "访问 6 次"
+
+[[domain]]
+name = "mail.google.com"
+group = "cn"
+tier = 1
+note = "访问 6 次"
+
+[[domain]]
+name = "avjb.com"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "bing.com"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "cavporn.com"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "ecs-buy.aliyun.com"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "google.cn"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "imageglass.org"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "rustdesk.com"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "www.amd.com"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "www.jtti.cc"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "www.koolcenter.com"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "www.racknerd.com"
+group = "cn"
+tier = 1
+note = "访问 4 次"
+
+[[domain]]
+name = "javdb.com"
+group = "cn"
+tier = 1
+note = "访问 3 次"
+
+[[domain]]
+name = "www.aliyun.com"
+group = "cn"
+tier = 1
+note = "访问 3 次"
+
+[[domain]]
+name = "en.wikipedia.org"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "mail.163.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "map.baidu.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "openai.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "stackoverflow.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "tieba.baidu.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "twitter.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "v.qq.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "weibo.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.126.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.163.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.amap.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.amazon.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.apple.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.baidu.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.bbc.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.cloudflare.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.ctrip.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.dianping.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.douban.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.douyin.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.iqiyi.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.jd.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.kuaishou.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.meituan.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.mi.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.microsoft.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.netflix.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.nytimes.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.pinduoduo.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.qq.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.reddit.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.suning.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.taobao.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.tmall.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.vip.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.xiaohongshu.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.youku.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.youtube.com"
+group = "global"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "www.zhihu.com"
+group = "cn"
+tier = 1
+note = "core"
+
+[[domain]]
+name = "accounts.google.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "cf.qq.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "chat.deepseek.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "cloud.tencent.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "dash.cloudflare.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "ecs.console.aliyun.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "explore.microsoft.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "hosthatch.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "login.cfhuodong.cn"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "login.k-88.cn"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "outlook.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "sso.koolcenter.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "study.xindev.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "url5847.hosthatch.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "vpscost.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "www.codecguide.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "www.hhost.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "www.sdgdwljt.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "www.shandian666.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "www.yecaoyun.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "xn--9kqy92aw5h.com"
+group = "cn"
+tier = 2
+note = "访问 3 次"
+
+[[domain]]
+name = "account.aliyun.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "adblockplus.org"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "aliyun.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "doc.oplist.org"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "docs.trae.cn"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "documentation.ubuntu.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "geekuninstaller.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "gist.github.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "git-scm.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "gmail.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "go.marzaent.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "home.console.aliyun.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "kb.leaseweb.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "link.zhihu.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "login.microsoftonline.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "mail.qq.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "microsoftedge.microsoft.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "nerdvm.racknerd.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "note.youdao.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "notifications2.console.aliyun.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "pan.xunlei.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "passport.baidu.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "payauth.alipay.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "search.bilibili.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "workupload.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.123xpg.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.detectiteasy.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.idcoffer.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.instagram.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.itdog.cn"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.nmc.cn"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.nocmd.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.pingwest.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.speedtest.net"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.zhujiceping.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.zukong.xyz"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "yfdabv11.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "zh.stripchat.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "zhuanlan.zhihu.com"
+group = "cn"
+tier = 2
+note = "访问 2 次"
+
+[[domain]]
+name = "www.10000.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.10010.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.10086.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.10jqka.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.114dns.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.12306.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.12321.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.12377.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.163yun.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.1688.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.17173.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.189.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.19lou.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.21yunbox.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.360buy.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.36kr.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.3dmgame.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.4399.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.51job.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.55bbs.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.58.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.58pic.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.699pic.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.7k7k.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.7news.com.au"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.8world.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.95559.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.95598.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.9news.com.au"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aa.com.tr"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.abc.net.au"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.abchina.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.abcnews.go.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.abs-cbn.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.acfun.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.adguard-dns.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.adguard.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.adobe.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.afrinic.net"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.akamai.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.alexa.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ali213.net"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.alibaba.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aliexpress.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.alipay.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aliqin.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aliworker.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aliyuncdn.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aljazeera.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.amazon.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.anaconda.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.android.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aninews.in"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.anjuke.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ansible.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.antgroup.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.anthropic.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aol.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.apache.org"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.apnic.net"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.apollo.auto"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.archives.gov"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.arin.net"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.arubanetworks.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.asahi.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.asiaone.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ask.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.atlassian.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.audible.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.audiomack.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.autodesk.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.autohome.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.autonavi.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.aws.amazon.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.azure.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.baidubce.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bandcamp.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bangkokpost.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bankcomm.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bankofbeijing.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bankofnj.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bankofshanghai.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bastillepost.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.battle.net"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bbc.co.uk"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.beatsbydre.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.beian.miit.gov.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.billboard.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bing.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bitauto.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bj.ziroom.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.blizzard.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.blogger.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.blogger.jp"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bloomberg.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bloombergquint.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bnu.edu.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.boc.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.box.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.boxofficemojo.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.brave.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bshare.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.btbtdy.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.business-standard.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.businesstimes.com.sg"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.bytedance.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.caac.gov.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.caixin.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.canada.ca"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.canva.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.capcut.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cas.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cbc.ca"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cbirc.gov.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cbsnews.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ccb.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ccdi.gov.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cctv.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cdc.gov"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ce.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cebbank.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cernet.edu.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.changba.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.changyou.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.channelnewsasia.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.che168.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cheshi.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.china.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinabond.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinaclear.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinadaily.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinaipo.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinamobile.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinanews.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinatax.gov.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinatelecom.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinatimes.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chinaunicom.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chromium.org"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chsi.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.chuangyebang.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cib.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cicc.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cisco.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cleanbrowsing.org"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cmbc.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cmbchina.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cnbeta.com.tw"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cnevpost.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cnn.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cnnic.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cnnic.net.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cnstock.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cntv.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.congress.gov"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.controld.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.corriere.it"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.court.gov.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.crowdstrike.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.crunchyroll.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cs.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cscse.edu.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.csdn.net"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.csrc.gov.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ctvnews.ca"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ctyun.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.customs.gov.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cyberpolice.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.cyzone.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.czbank.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.d1ev.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dache.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dailysabah.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.danke.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.daraz.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dawn.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.deezer.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.detik.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.diaodiaode.me"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.didi.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.digitalocean.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.digwebinterface.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dingtalk.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.discord.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.disneyplus.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.djangoproject.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dns.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dns.sb"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dnschecker.org"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dnspai.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dnsperf.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dnspod.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dnswatch.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.docker.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dongchedi.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dongqiudi.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.doubanio.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.douyu.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dropbox.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.duckduckgo.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.duitang.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.duowan.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dw.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.dygod.net"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ea.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.eastmoney.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ec.com.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.eclipse.org"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.economist.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.ecosia.org"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.edu.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.elastic.co"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.elong.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.elpais.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.enom.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.epicgames.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.espn.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.espnfc.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.eurogamer.net"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.evernote.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.excite.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.expreview.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.facebook.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.faceu.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.fang.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.fanqienovel.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.fastly.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.faz.net"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.feishu.cn"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.feizhu.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.fifa.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.figma.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.firstpost.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.fitbit.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.fliggy.com"
+group = "cn"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.fly.io"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.forbes.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.formula1.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.fortinet.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "www.foxnews.com"
+group = "global"
+tier = 2
+note = "seed"
+
+[[domain]]
+name = "about.gitlab.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ai.google"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ai.taobao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ajax.cloudflare.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ajax.googleapis.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "api.cloudflare.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "apps.apple.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "assets.alicdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "atanx.alicdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "auto.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "azure.microsoft.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "baike.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "bard.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "bbs.hupu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "bitbucket.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "blog.csdn.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "c.y.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "calendar.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdn.acwing.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdn.aliyun.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdn.bootcdn.net"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdn.bootcss.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdn.jsdelivr.net"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdn.mxpnl.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdn.segment.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdn.staticfile.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cdnjs.cloudflare.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cgi.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "chat.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "chrome.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ci-cdn.xiaohongshu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ci.xiaohongshu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "claude.ai"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cloud.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cloud.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "code.visualstudio.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "codeload.github.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "colab.research.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "common.alicdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "commons.wikimedia.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "console.aws.amazon.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "console.bce.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "console.cloud.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "console.cloud.tencent.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "console.huaweicloud.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "cos.ap-guangzhou.myqcloud.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "crates.io"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "deepmind.google"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "deno.land"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "detail.tmall.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "developer.android.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "developer.apple.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "developer.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "developers.facebook.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "dict.youdao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "discordapp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "dns.console.aliyun.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "docs.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "docs.microsoft.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "docs.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "docs.weixin.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "drive.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "dss0.bdstatic.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "dss1.bdstatic.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ecs.aliyun.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "edith.xiaohongshu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "edu.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ent.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "fanyi.youdao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "fastapi.tiangolo.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "fastly.jsdelivr.net"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "feedburner.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "files.pythonhosted.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "finance.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "firebase.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "flask.palletsprojects.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "fonts.googleapis.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "g.alicdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "game.163.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "game.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "gemini.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "github.io"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "go.dev"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "golang.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "gongyi.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "gp.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "graph.facebook.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "gw.alicdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "h5.m.taobao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "hdslb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "helpx.adobe.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "hm.baidu.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "hmma.baidu.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "house.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "httpd.apache.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "hub.docker.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "huggingface.co"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "i0.hdslb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "i1.hdslb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "i2.hdslb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "im.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "image.baidu.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.alicdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.kuaishou.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.mukewang.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.pddpic.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.ph.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.xiami.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.xiami.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.xiaohongshu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img.youtube.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img01.taobaocdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img1.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img1.ph.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img1.sycdn.kuwo.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img10.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img11.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img12.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img13.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img14.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img2.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img2.ph.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img20.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img3.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img4.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img5.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img6.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img7.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img8.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "img9.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "item.jd.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "jupyter.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "k.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ke.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "keep.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "keras.io"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "kf.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "kubernetes.io"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "kyfw.12306.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "lf26-cdn-tos.bytecdntp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "lf3-cdn-tos.bytecdntp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "lf6-cdn-tos.bytecdntp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "lf9-cdn-tos.bytecdntp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "lib.baomitu.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "live.bilibili.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "login.taobao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "lol.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "m.360buyimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "m.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "m.youtube.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "m10.music.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "maps.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "matplotlib.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "meet.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "meeting.tencent.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "mobile.yangkeduo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "movie.douban.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "music.163.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "music.apple.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "music.taihe.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "music.youtube.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "my.uc.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "n.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "news.163.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "news.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "news.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "news.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "news.sina.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "nodejs.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "numpy.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "objects.githubusercontent.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "old.reddit.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "omsproductionimg.yangkeduo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "onedrive.live.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "open.spotify.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "oss.aliyun.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p.3.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p1-arco.byteimg.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p1.a.yximgs.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p1.music.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p1.pstatp.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p2.a.yximgs.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p2.music.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p26.toutiaoimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p3-arco.byteimg.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p3.a.yximgs.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p3.music.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p3.pstatp.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p4.a.yximgs.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p4.music.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p5.music.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p6-arco.byteimg.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p6.pstatp.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p9-arco.byteimg.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "p9.pstatp.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pandas.pydata.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pg.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "photos.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pic.rmb.bdstatic.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pic1.zhimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pic2.zhimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pic3.zhimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pic4.zhimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "picx.zhimg.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pkg.go.dev"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "platform.openai.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "play.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "policies.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "portal.azure.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "portal.qiniu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pypi.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "pytorch.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "qianfan.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "qun.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "qzone.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "raw.githubusercontent.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "registry.npmjs.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "s.taobao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "s.weibo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "s1.hdslb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "s1.music.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "s2.hdslb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "s2.music.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "s3.amazonaws.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "s3.hdslb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "scikit-learn.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "search.marcia.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "serverfault.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "sf1-ttcdn-tos.pstatp.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "sf3-ttcdn-tos.pstatp.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "sf6-ttcdn-tos.pstatp.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "shopping.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "sns-avatar-qc.xhscdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "sns-webpic-qc.xhscdn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "sports.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "sports.sina.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ss0.bdstatic.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ss1.baidu.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ss1.bdstatic.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ss2.baidu.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ss2.bdstatic.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ss3.baidu.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ss3.bdstatic.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "ssl.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "stackexchange.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "static.hdslb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "static.runoob.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "static.zhihu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "storage.googleapis.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "store.apple.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "store.steampowered.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "store.xbox.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "superuser.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "support.apple.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "support.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "support.microsoft.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "t.co"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "t00img.yangkeduo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "teams.microsoft.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tech.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tos-cn-i-0000.tos-cn-beijing.volces.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "translate.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tv.apple.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tv.cctv.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tvax1.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tvax2.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tvax3.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tvax4.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "tx2.a.yximgs.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "unpkg.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "v.youku.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "video.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "vip.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "visualstudio.microsoft.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "vod.126.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "waimai.meituan.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "web.telegram.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "weibo.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "wenku.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "wenxin.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "whois.domaintools.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "work.weixin.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "workspace.google.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.acwing.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.france24.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.freshippo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ft.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.fudan.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.funds.hexun.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.funimation.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gamersky.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gamespot.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gandi.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ganji.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gasgoo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gdb.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.geforce.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.geo.tv"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.giantbomb.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gifshow.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gigablast.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gitee.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.github.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gitlab.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.globalnews.ca"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gmanetwork.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gnu.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.goal.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.godaddy.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gog.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gome.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.goodreads.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.google.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.googleadservices.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.googleoptimize.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.grc.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.gtja.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.haaretz.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hao123.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hbomax.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hellobike.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hemaos.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.heroku.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hetzner.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hexun.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hindustantimes.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hk.on.cc"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hk01.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.honor.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hotstar.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.howbuy.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.htsc.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.huaban.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.huanqiu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.huaweicloud.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hubspot.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hulu.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.humblebundle.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.huoshanzhibo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hupu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hurriyet.com.tr"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hust.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.huxiu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.huya.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hxb.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.hz.163.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.iana.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ibm.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.icann.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.icbc.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.icloud.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.iesdouyin.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ifanr.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ign.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.imdb.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.imf.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.indianexpress.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.infoq.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.inquirer.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.intel.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.irna.ir"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ithome.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.itjuzi.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.itunes.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ixigua.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ixiqi.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.iyiou.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.japantimes.co.jp"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jd.hk"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jdcloud.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jenkins.io"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jetbrains.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jianying.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jiathis.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jiemian.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jpnn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jpost.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.jrj.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.juejin.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kaggle.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kaola.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kaoyan.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kdnet.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kdslife.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ke.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kernel.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kingsoft.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kompas.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.kuaishou.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.lacnic.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.larkoffice.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.last.fm"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.lazada.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.leiphone.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.lemonde.fr"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.lianjia.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.licaishi.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.lieyunwang.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.line.me"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.linkedin.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.linode.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.linuxfoundation.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.livemint.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.loc.gov"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.lofter.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.loldytt.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.longzhu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.lvmama.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.lycos.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mac.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.macleans.ca"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mafengwo.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.malaysiakini.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mandiant.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.marca.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mca.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mct.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.meilishuo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.meizu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mem.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.messenger.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.meta.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.metacritic.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mfw.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mgtv.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.midjourney.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.miit.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.miitbeian.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.minecraft.net"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mingpao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mlb.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mnr.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.moa.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mobike.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.moe.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mof.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mogujie.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mohrss.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mojeek.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mongodb.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.montreal.ca"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mop.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.motogp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mps.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.msn.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.music.163.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mybank.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.mysql.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.name.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.namecheap.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nasa.gov"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nationalpost.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nationthailand.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nba.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nbcnews.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ndrc.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ndtv.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.neea.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nest.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.netlify.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.netscape.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.news.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.news.com.au"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nextdns.io"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nfl.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nginx.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ngs.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nhc.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nhl.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nih.gov"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nikkei.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nipic.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nju.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.noaa.gov"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.notion.so"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.now.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.npmjs.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nslookup.io"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nst.com.my"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nuget.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nvidia.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.nzherald.co.nz"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.oculus.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.oecd.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.office.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.olympics.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.omy.sg"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.one-dns.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.oneplus.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.opendns.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.openstack.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.oppomobile.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.oracle.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.orientaldaily.com.hk"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.origin.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.oschina.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ovh.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.paixin.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.paloaltonetworks.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pandora.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.paopaoche.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.paramountplus.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pbc.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pcauto.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pcgamer.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.peacocktv.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pedaily.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.people.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.philstar.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pingan.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pinterest.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pitchfork.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pku.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.pkulaw.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.polygon.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.postgresql.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.powershellgallery.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.premierleague.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.primevideo.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.psbc.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.python.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qcdq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qcloud.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qingcloud.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qingting.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qiniu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qiyi.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qqmusic.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.quad9.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.quanjing.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.quark.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qunar.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.qwant.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.rabbitmq.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.rappler.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.redis.io"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.render.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.repubblica.it"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.republicworld.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.reuters.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.riotgames.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ripe.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.rnz.co.nz"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.roblox.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.rottentomatoes.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.rrys.tv"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.rthk.hk"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ruc.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.runoob.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.rust-lang.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.safe.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.salesforce.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sap.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sasac.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sat.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.scaleway.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.scmp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sdns.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.searx.me"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.servicenow.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.shopify.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sina.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sina.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sjtu.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.skype.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.skysports.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.slack.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.smh.com.au"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.smithsonianmag.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.smzdm.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.snapchat.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sohu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.soundcloud.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sourcetreeapp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.spdb.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.spiegel.de"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.splunk.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sport.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.spotify.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.spp.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sqlite.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sse.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.stackoverflow.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.startpage.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.stats.gov.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.stcn.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.steampowered.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.stheadline.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.straitstimes.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.stuff.co.nz"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.subhd.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.supremecourt.gov"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.surface.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.sysu.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.szse.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.taihe.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.taoche.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.taptap.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.taptap.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tehrantimes.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.telegram.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tempo.co"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tencent.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tencentcloud.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tencentedu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tencentmusic.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tensorflow.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.terraform.io"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.thanhnien.vn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.theage.com.au"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.theglobeandmail.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.theguardian.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.thehindu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.thenews.com.pk"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.thepaper.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.thestar.com.my"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.threads.net"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tiantianfund.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tianya.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tidal.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tiktok.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.timesnownews.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.timesofindia.indiatimes.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.timesofisrael.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.todayonline.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.topit.me"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.toronto.ca"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.toutiao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.toutiaopage.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.transfermarkt.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.trello.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.trip.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tsinghua.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tuchong.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tuniu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tuoitre.vn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.tvb.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.twitch.tv"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.twitter.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.uber.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ubisoft.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.uc.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ucloud.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.uefa.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.un.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.unesco.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.unicef.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.upyun.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.usa.gov"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.usatoday.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.usgs.gov"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.vancouver.ca"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.veer.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.vercel.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.verisign.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.verycd.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.viber.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.visualstudio.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.vivo.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.vmall.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.vmware.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.vnexpress.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.volcengine.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.vultr.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wanbao.com.sg"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wanmei.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.washingtonpost.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wasu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.waze.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wechat.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.weforum.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.weiyun.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.whatsapp.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.whatsmydns.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.whitehouse.gov"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.who.int"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.who.is"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wholefoodsmarket.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.whu.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wikimedia.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wikipedia.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.windows.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.woa.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wocloud.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.workday.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.workplace.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.worldbank.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wsj.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.wto.org"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.x.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xbox.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xboxlive.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xchuxing.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xhs.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xianyu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xiaomi.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xici.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xiezuo.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xinhua08.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xinhuanet.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xjtu.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xueqiu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.xy.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.yahoo.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.yanxuan.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.yeah.net"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ygdy8.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.yicai.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.yiche.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ynetnews.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.youdao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zaobao.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zaobao.com.sg"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zappos.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zcool.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zeit.de"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zhanqi.tv"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zhaopin.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zhibo8.cc"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zijie.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zimuxia.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zimuzu.tv"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.ziroom.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zju.edu.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zol.com.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zoom.us"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "www.zszq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "wx.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "wx1.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "wx2.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "wx3.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "wx4.sinaimg.cn"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "xin.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "xueshu.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "y.qq.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "yiyan.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "youtube.com"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "yun.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "zh.wikipedia.org"
+group = "global"
+tier = 3
+note = "seed"
+
+[[domain]]
+name = "zhidao.baidu.com"
+group = "cn"
+tier = 3
+note = "seed"
+
