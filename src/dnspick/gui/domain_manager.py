@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import threading
 import tomllib
 from dataclasses import dataclass, field
@@ -31,6 +32,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from dnspick.api_discovery import ApiDomainDiscovery
 from dnspick.domain_store import DomainStore
 from dnspick.models import Group
 from dnspick.relation_store import RelationStore
@@ -376,7 +378,7 @@ class DomainManagerDialog(QDialog):
 
         self._btn_scan.setEnabled(False)
         self._btn_scan.setText("扫描中…")
-        self._scan_result: list[str] | None = None
+        self._scan_result: dict[str, int] | None = None
         self._scan_error: str | None = None
 
         def _run() -> None:
@@ -393,6 +395,7 @@ class DomainManagerDialog(QDialog):
             if scan_thread.is_alive():
                 return
             self._scan_timer.stop()
+            self._scan_timer.deleteLater()
             self._on_scan_finished()
 
         self._scan_timer.timeout.connect(_check)
@@ -401,13 +404,24 @@ class DomainManagerDialog(QDialog):
 
     def _on_scan_finished(self) -> None:
         """扫描线程完成后在主线程处理结果。"""
-        if self._scan_error:
-            QMessageBox.critical(self, "扫描失败", f"扫描浏览器历史时出错：{self._scan_error}")
+        error = self._scan_error
+        result = self._scan_result
+        self._scan_error = None
+        self._scan_result = None
+
+        if error:
+            QMessageBox.critical(self, "扫描失败", f"扫描浏览器历史时出错：{error}")
             self._btn_scan.setEnabled(True)
             self._btn_scan.setText("扫描浏览器历史")
             return
 
-        found = self._scan_result
+        if result is None:
+            QMessageBox.warning(self, "扫描异常", "扫描未返回结果，请重试。")
+            self._btn_scan.setEnabled(True)
+            self._btn_scan.setText("扫描浏览器历史")
+            return
+
+        found = list(result.keys())
         if not found:
             QMessageBox.information(self, "无结果", "未找到浏览器历史记录。")
             self._btn_scan.setEnabled(True)
@@ -487,7 +501,7 @@ class DomainManagerDialog(QDialog):
             )
 
     def _show_relations(self) -> None:
-        """显示选中域名的全部关联域名。"""
+        """对选中的域名运行 API 发现，查 HTML + crt.sh 获取关联域名。"""
         rows = set()
         for idx in self._table.selectedIndexes():
             rows.add(idx.row())
@@ -501,25 +515,105 @@ class DomainManagerDialog(QDialog):
             return
         name = name_item.text()
 
-        all_rels = self._rel_store.get_all_relations(name)
-        if not all_rels:
-            QMessageBox.information(self, "无关联", f"域名 {name} 没有任何关联域名记录。")
+        self._btn_relation.setEnabled(False)
+        self._btn_relation.setText("发现中…")
+        self._discovery_result = None
+        self._discovery_error = None
+
+        def _run() -> None:
+            try:
+                discovery = ApiDomainDiscovery(
+                    store=self._rel_store,
+                    cache_days=0,     # 强制重新发现
+                    html_timeout=5.0,
+                    crt_timeout=8.0,
+                )
+                self._discovery_result = asyncio.run(discovery.discover(name))
+            except Exception as exc:
+                self._discovery_error = str(exc)
+
+        thread = threading.Thread(target=_run, daemon=True)
+        self._discovery_timer = QTimer(self)
+        self._discovery_timer.setInterval(100)
+
+        def _check() -> None:
+            if thread.is_alive():
+                return
+            self._discovery_timer.stop()
+            self._discovery_timer.deleteLater()
+            self._on_discovery_finished(name)
+
+        self._discovery_timer.timeout.connect(_check)
+        self._discovery_timer.start()
+        thread.start()
+
+    def _on_discovery_finished(self, name: str) -> None:
+        """API 发现完成后在主线程展示结果。"""
+        self._btn_relation.setEnabled(True)
+        self._btn_relation.setText("查看关联")
+
+        error = self._discovery_error
+        result = self._discovery_result
+        self._discovery_error = None
+        self._discovery_result = None
+
+        if error:
+            QMessageBox.critical(self, "发现失败", f"API 域名发现失败：{error}")
             return
 
-        lines = [f"<b>{name}</b> 的关联域名："]
+        if result is None:
+            QMessageBox.warning(self, "异常", "发现未返回结果，请重试。")
+            return
+
+        if result.from_cache:
+            QMessageBox.information(self, "来自缓存",
+                                    f"{name} 的关联域名已在缓存中，未重新抓取。")
+
+        # 构建结果展示
+        lines = [f"<b>{name}</b> 的关联域名发现结果："]
         lines.append("")
-        by_source: dict[str, list[str]] = {}
-        for r in all_rels:
-            by_source.setdefault(r["source"], []).append(r["related_domain"])
 
-        source_labels = {"html": "HTML 抓取", "crt_sh": "crt.sh 证书", "manual": "手动关联"}
-        for src, domains in by_source.items():
-            label = source_labels.get(src, src)
-            lines.append(f"  [{label}] {len(domains)} 个:")
-            for d in sorted(domains):
+        if result.html_success:
+            html_list = sorted(result.html_domains)
+            lines.append(f"  [HTML 抓取] 发现 {len(html_list)} 个:")
+            for d in html_list[:30]:
                 lines.append(f"    · {d}")
+            if len(html_list) > 30:
+                lines.append(f"    …等 {len(html_list)} 个")
+        else:
+            lines.append(
+                f"  [HTML 抓取] <span style='color:#c0392b'>失败</span>"
+                f"{' — ' + result.html_error if result.html_error else ''}"
+            )
 
-        QMessageBox.information(self, f"关联域名 - {name}", "<br>".join(lines[:50]))
+        lines.append("")
+
+        if result.crt_success:
+            crt_list = sorted(result.crt_domains)
+            lines.append(f"  [crt.sh 证书] 发现 {len(crt_list)} 个:")
+            for d in crt_list[:30]:
+                lines.append(f"    · {d}")
+            if len(crt_list) > 30:
+                lines.append(f"    …等 {len(crt_list)} 个")
+        else:
+            lines.append(
+                f"  [crt.sh 证书] <span style='color:#c0392b'>失败</span>"
+                f"{' — ' + result.crt_error if result.crt_error else ''}"
+            )
+
+        all_count = len(result.all_domains)
+        if all_count > 0:
+            lines.append("")
+            lines.append(f"去重后共 <b>{all_count}</b> 个关联域名（已写入缓存）。")
+        else:
+            lines.append("")
+            lines.append("<span style='color:#e67e22'>未发现任何关联域名。</span>")
+
+        msg = QMessageBox(self)
+        msg.setWindowTitle(f"关联域名 — {name}")
+        msg.setText("<br>".join(lines[:80]))
+        msg.setTextFormat(Qt.TextFormat.RichText)
+        msg.exec()
 
     def _import_toml(self) -> None:
         """从 TOML 文件导入域名到 DomainStore。"""

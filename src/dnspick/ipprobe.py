@@ -238,6 +238,7 @@ class IpProber:
         hop_timeout: float = 1.0,
         icmp_enabled: bool = True,
         icmp_count: int = 4,
+        icmp_timeout: float = 4.0,
         icmp_concurrency: int = 32,
         deep_traceroute: bool = False,
         on_progress: Callable | None = None,
@@ -250,6 +251,7 @@ class IpProber:
         self.hop_timeout = hop_timeout
         self.icmp_enabled = icmp_enabled
         self.icmp_count = icmp_count
+        self.icmp_timeout = icmp_timeout
         self.icmp_concurrency = icmp_concurrency
         self.deep_traceroute = deep_traceroute
         self.on_progress = on_progress
@@ -300,7 +302,7 @@ class IpProber:
 
                 async def _icmp() -> tuple:
                     return await loop.run_in_executor(
-                        None, icmp_ping_blocking, ip, self.icmp_count,
+                        None, icmp_ping_blocking, ip, self.icmp_count, self.icmp_timeout,
                     )
 
                 async def _trace() -> list[str]:

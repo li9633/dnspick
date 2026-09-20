@@ -226,6 +226,10 @@ class SettingsDialog(QDialog):
         self.ecs.setChecked(self.config.use_ecs)
         form.addRow(self.ecs)
 
+        self.api_discovery = QCheckBox("API 域名自动发现：从主站首页 + 证书日志寻找关联域名（耗时较长）")
+        self.api_discovery.setChecked(t.api_discovery_enabled)
+        form.addRow(self.api_discovery)
+
         w = QWidget()
         w.setLayout(form)
         return w
@@ -325,5 +329,6 @@ class SettingsDialog(QDialog):
             t.with_profile(self.profile.currentText())
             if self.profile.currentText() != "balanced":
                 t.w_speed = float(self.w_speed.value())
+        t.api_discovery_enabled = self.api_discovery.isChecked()
         self.config.use_ecs = self.ecs.isChecked()
         self.accept()

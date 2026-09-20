@@ -21,7 +21,9 @@ from PySide6.QtWidgets import (
 
 from dnspick.models import StageProgress
 
-# 各阶段经验权重（用于 ETA 预估）
+# 权重为 0 的阶段不参与剩余时间估算（瞬时完成的元信息阶段）
+_ZERO_WEIGHT_SENTINEL = 0.0
+
 _DEFAULT_WEIGHTS: dict[str, float] = {
     "环境探测": 1,
     "域名收集": 0,
@@ -265,13 +267,13 @@ class ProgressPanel(QWidget):
 
         rate = total_time_done / total_weight_done  # 秒/权重单位
 
-        # 剩余阶段总权重
+        # 剩余阶段总权重（权重为 0 的阶段跳过）
         remaining_weight = 0.0
         remaining_stages: list[str] = []
         for name in self._stages:
-            if name not in completed_durations and name not in ("域名收集", "评分"):
+            if name not in completed_durations:
                 w = self._weights.get(name, 1)
-                if w > 0:
+                if w > _ZERO_WEIGHT_SENTINEL:
                     remaining_weight += w
                     remaining_stages.append(name)
 

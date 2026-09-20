@@ -112,6 +112,10 @@ def run(
     no_icmp: bool = typer.Option(False, "--no-icmp", help="关闭 ICMP ping"),
     no_geoip: bool = typer.Option(False, "--no-geoip", help="关闭归属地查询"),
     ecs: bool = typer.Option(False, "--ecs", help="启用 ECS 对比查询（需探测公网 IP）"),
+    api_discovery: bool = typer.Option(
+        False, "--api-discovery",
+        help="启用 API 域名自动发现（从主站首页 + crt.sh 证书日志）",
+    ),
     json_out: Path | None = typer.Option(None, "--json", help="结果输出为 JSON"),
     csv_out: Path | None = typer.Option(None, "--csv", help="结果输出为 CSV"),
     geoip_db: str | None = typer.Option(None, "--geoip-db", help="MaxMind mmdb 路径（可选）"),
@@ -131,6 +135,8 @@ def run(
         t.icmp_enabled = False
     if no_geoip:
         t.geoip_enabled = False
+    if api_discovery:
+        t.api_discovery_enabled = True
     if protocol:
         wanted = {p.strip().lower() for p in protocol.split(",")}
         keep = {s.id for s in cfg.servers if s.enabled and s.protocol.value in wanted}

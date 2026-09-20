@@ -219,7 +219,6 @@ class MainWindow(QMainWindow):
         root.addWidget(self.log)
 
         self.setCentralWidget(central)
-        self._update_estimate()
 
     def _build_menu(self) -> None:
         menu = self.menuBar().addMenu("文件")
@@ -383,7 +382,7 @@ class MainWindow(QMainWindow):
     def _on_profile_changed(self, name: str) -> None:
         self.profile_label.setText(_PROFILE_HINTS.get(name, ""))
 
-    def _update_estimate(self) -> None:
+    def _reset_progress(self) -> None:
         self.progress_panel.reset()
 
     def open_settings(self) -> None:
@@ -396,7 +395,7 @@ class MainWindow(QMainWindow):
             self.profile_label.setText(_PROFILE_HINTS.get(self.config.tunables.profile, ""))
             self._refresh_protocol_cards()
             self._refresh_domain_summary()
-            self._update_estimate()
+            self._reset_progress()
 
     def load_servers_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(self, "选择 servers.toml", "", "TOML (*.toml)")
@@ -404,7 +403,7 @@ class MainWindow(QMainWindow):
             self.config = load_config(Path(path))
             self._refresh_protocol_cards()
             self._refresh_domain_summary()
-            self._update_estimate()
+            self._reset_progress()
             self._log_info(f"已载入服务器清单：{path}")
 
     def _open_domain_manager(self) -> None:
@@ -413,7 +412,7 @@ class MainWindow(QMainWindow):
         dlg = DomainManagerDialog(self.dom_store, rel_store, self)
         if dlg.exec():
             self._refresh_domain_summary()
-            self._update_estimate()
+            self._reset_progress()
             self._log_info("域名配置已更新")
 
     def show_about(self) -> None:

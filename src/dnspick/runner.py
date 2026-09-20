@@ -186,8 +186,6 @@ class Runner:
         self.dom_store.init()
         domains = self.dom_store.get_enabled()
         servers = self.cfg.active_servers()
-        summary.servers = len(servers)
-        summary.domains = len(domains)
         self._emit("域名收集", len(domains), len(domains),
                    f"共 {len(domains)} 个域名，{len(servers)} 台服务器")
 
@@ -215,6 +213,9 @@ class Runner:
                 self._emit("API发现", 1, 1, "未发现新关联域名")
         else:
             self._skip_stage("API发现")
+
+        summary.servers = len(servers)
+        summary.domains = len(domains)
 
         # === 阶段B: DNS 测量 ============================================
 
@@ -266,6 +267,7 @@ class Runner:
             hop_timeout=t.hop_timeout,
             icmp_enabled=t.icmp_enabled,
             icmp_count=t.icmp_count,
+            icmp_timeout=t.icmp_timeout_s,
             icmp_concurrency=t.icmp_concurrency,
             deep_traceroute=t.deep_traceroute,
             on_progress=lambda d, n, m: self._emit("IP 探测", d, n, m),
@@ -299,7 +301,6 @@ class Runner:
         hijacks = hijack_from_probes(records)
         scorer = Scorer(t)
         reports = scorer.build(servers, records, ip_results, hijacks, ecs_support)
-        self._emit("评分", 1, 1, "完成")
 
         # 末阶段 done
         duration = time.time() - self._stage_started
