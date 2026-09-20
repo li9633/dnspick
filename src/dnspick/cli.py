@@ -14,6 +14,7 @@ from rich.table import Table
 from dnspick import __version__
 from dnspick.config import Tunables, load_config
 from dnspick.discover import build_report, write_toml
+from dnspick.log import log
 from dnspick.models import ServerReport, StageProgress, Verdict
 from dnspick.runner import Runner
 
@@ -147,6 +148,9 @@ def run(
         raise typer.Exit(1)
 
     runner = Runner(cfg)
+
+    log.set_console(console)
+
     with Progress(
         SpinnerColumn(),
         TextColumn("[progress.description]{task.description}"),

@@ -6,7 +6,6 @@
 
 from __future__ import annotations
 
-import enum
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -37,21 +36,16 @@ from dnspick.gui.history import HistoryWindow
 from dnspick.gui.progress_panel import ProgressPanel
 from dnspick.gui.settings import SettingsDialog
 from dnspick.gui.worker import ProbeWorker
+from dnspick.log import log
 from dnspick.models import Group, Protocol, RunResult
 from dnspick.relation_store import RelationStore
 from dnspick.store import ResultStore
 
-
-class LogLevel(enum.Enum):
-    INFO = "info"
-    WARN = "warn"
-    ERROR = "error"
-
-
-_LOG_COLOR: dict[LogLevel, str] = {
-    LogLevel.INFO: "#e0e0e0",
-    LogLevel.WARN: "#f1a340",
-    LogLevel.ERROR: "#d73027",
+_LOG_COLOR: dict[str, str] = {
+    "info": "#e0e0e0",
+    "warn": "#f1a340",
+    "error": "#d73027",
+    "debug": "#888",
 }
 
 _PROFILE_HINTS: dict[str, str] = {
@@ -217,6 +211,7 @@ class MainWindow(QMainWindow):
         self.log.setReadOnly(True)
         self.log.setMaximumHeight(150)
         root.addWidget(self.log)
+        log.appended.connect(self._on_log_entry)
 
         self.setCentralWidget(central)
 
@@ -404,7 +399,7 @@ class MainWindow(QMainWindow):
             self._refresh_protocol_cards()
             self._refresh_domain_summary()
             self._reset_progress()
-            self._log_info(f"已载入服务器清单：{path}")
+            log.info(f"已载入服务器清单：{path}")
 
     def _open_domain_manager(self) -> None:
         """打开域名管理器对话框。"""
@@ -413,7 +408,7 @@ class MainWindow(QMainWindow):
         if dlg.exec():
             self._refresh_domain_summary()
             self._reset_progress()
-            self._log_info("域名配置已更新")
+            log.info("域名配置已更新")
 
     def show_about(self) -> None:
         QMessageBox.information(
@@ -424,22 +419,16 @@ class MainWindow(QMainWindow):
             "只做测量与建议，不修改任何系统设置。",
         )
 
-    def _log(self, level: LogLevel, msg: str) -> None:
-        ts = datetime.now(UTC).astimezone().strftime("%H:%M:%S")
-        color = _LOG_COLOR[level]
-        tag = level.name
-        self.log.append(f'<span style="color:#666">{ts}</span> '
-                        f'<span style="color:{color}">[{tag}]</span>&nbsp; '
-                        f'{msg}')
-
-    def _log_info(self, msg: str) -> None:
-        self._log(LogLevel.INFO, msg)
-
-    def _log_warn(self, msg: str) -> None:
-        self._log(LogLevel.WARN, msg)
-
-    def _log_error(self, msg: str) -> None:
-        self._log(LogLevel.ERROR, msg)
+    def _on_log_entry(self, ts: str, modpath: str, level: str, msg: str) -> None:
+        """log.appended Signal → 追加到 QTextEdit。"""
+        short_ts = ts[-8:] if len(ts) >= 8 else ts  # HH:MM:SS
+        color = _LOG_COLOR.get(level, "#e0e0e0")
+        self.log.append(
+            f'<span style="color:#666">{short_ts}</span> '
+            f'<span style="color:#888; font-size:10px">[{modpath}]</span> '
+            f'<span style="color:{color}">[{level.upper()}]</span>&nbsp; '
+            f'{msg}'
+        )
 
     # -- 测量 -------------------------------------------------------------
     def start_run(self) -> None:
@@ -463,7 +452,7 @@ class MainWindow(QMainWindow):
         self.worker.succeeded.connect(self.on_finished)
         self.worker.failed.connect(self.on_failed)
         self.worker.start()
-        self._log_info("测量开始…")
+        log.info("测量开始…")
 
     def stop_run(self) -> None:
         if self.worker:
@@ -475,7 +464,7 @@ class MainWindow(QMainWindow):
         self.btn_stop.setEnabled(False)
         self.progress_panel.finish(success=True)
         self._reset_status()
-        self._log_info("测量完成。")
+        log.info("测量完成。")
 
         QTimer.singleShot(50, lambda: self._handle_result(result))
 
@@ -484,7 +473,7 @@ class MainWindow(QMainWindow):
         self.btn_stop.setEnabled(False)
         self.progress_panel.finish(success=False)
         self._reset_status()
-        self._log_error(message)
+        log.error(message)
         QMessageBox.critical(self, "测量失败", message[:1200])
 
     def _handle_result(self, result: RunResult) -> None:
@@ -510,7 +499,7 @@ class MainWindow(QMainWindow):
             )
             self.btn_history.setText("查看结果 ✅")
         except Exception as exc:
-            self._log_error(f"保存结果失败：{exc}")
+            log.error(f"保存结果失败：{exc}")
             self.last_mid = None
 
         msg = QMessageBox(self)

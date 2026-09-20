@@ -20,7 +20,16 @@ from dnspick.config import Config
 from dnspick.domain_store import DomainStore
 from dnspick.geoip import GeoIpResolver
 from dnspick.ipprobe import IpProber, is_ip
-from dnspick.models import Group, IpProbeResult, ResolveRecord, RunResult, RunSummary, StageProgress
+from dnspick.log import log
+from dnspick.models import (
+    Group,
+    IpProbeResult,
+    ResolveRecord,
+    ResolveStatus,
+    RunResult,
+    RunSummary,
+    StageProgress,
+)
 from dnspick.relation_store import RelationStore
 from dnspick.resolver import DnsResolver, parse_ecs_subnet
 from dnspick.scorer import Scorer, hijack_from_probes
@@ -180,6 +189,7 @@ class Runner:
             ecs_subnet = None
         summary.ecs_subnet = ecs_subnet
         self._emit("环境探测", 1, 1, f"出口 IP: {public_ip or '未知'}")
+        log.info(f"出口公网 IP: {public_ip or '未知'}")
 
         # A2. 域名收集：从数据库加载启用的域名
         self._enter_stage("域名收集")
@@ -188,6 +198,7 @@ class Runner:
         servers = self.cfg.active_servers()
         self._emit("域名收集", len(domains), len(domains),
                    f"共 {len(domains)} 个域名，{len(servers)} 台服务器")
+        log.info(f"域名收集完成: {len(domains)} 个域名, {len(servers)} 台服务器")
 
         # A3. API 域名自动发现（可选）
         if t.api_discovery_enabled:
@@ -236,6 +247,14 @@ class Runner:
 
         probes = builtin.probe_domains()
         records.extend(await resolver.run_probes(probes))
+        ok_count = sum(1 for r in records if r.ok)
+        timeout_count = sum(1 for r in records if r.status == ResolveStatus.TIMEOUT)
+        error_count = sum(1 for r in records if r.status == ResolveStatus.ERROR)
+        log.info(
+            f"DNS 解析完成: {len(records)} 条, {ok_count} 成功"
+            + (f", {timeout_count} 超时" if timeout_count else "")
+            + (f", {error_count} 错误" if error_count else "")
+        )
 
         # B2. ECS 对比（可选）
         ecs_support: dict[str, bool | None] = {s.id: None for s in servers}
@@ -274,9 +293,13 @@ class Runner:
         )
         ip_results = await prober.run(unique_ips)
 
+        unreachable = sum(1 for r in ip_results.values() if r.unreachable)
+        log.info(f"IP 探测完成: {len(ip_results)} 个 IP, {unreachable} 个不可达")
+
         Runner._check_environment(ip_results, summary)
         if summary.warning:
             self._emit("IP 探测", len(unique_ips), len(unique_ips), summary.warning)
+            log.warn(summary.warning)
 
         # B4. 归属地
         self._enter_stage("归属地")
@@ -307,6 +330,13 @@ class Runner:
         self._emit("评分", 1, 1, f"完成 · 耗时 {duration:.1f}s", "done")
 
         summary.duration_s = round(time.time() - started, 1)
+
+        recommend = sum(1 for r in reports if r.verdict and r.verdict.value == "recommend")
+        log.info(
+            f"测量完成 · 耗时 {summary.duration_s}s · "
+            f"{summary.servers} 台服务器 · {len(reports)} 份报告 · {recommend} 台推荐"
+        )
+
         return RunResult(
             reports=reports, ips=ip_results, records=records, summary=summary
         )
