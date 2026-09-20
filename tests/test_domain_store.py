@@ -200,6 +200,24 @@ def test_delete_only_non_builtin(store: DomainStore) -> None:
     assert "www.baidu.com" in {d.name for d in store.get_all()}
 
 
+def test_delete_batch(store: DomainStore) -> None:
+    store.init()
+    store.upsert("u1.example.com", Group.CN, "user", "")
+    store.upsert("u2.example.com", Group.GLOBAL, "user", "")
+    store.upsert("u3.example.com", Group.CN, "user", "")
+
+    deleted = store.delete_batch({"u1.example.com", "u2.example.com", "www.baidu.com"})
+    # builtin 域名不可删除，只删 user 源的
+    assert deleted == 2
+    assert not store.exists("u1.example.com")
+    assert not store.exists("u2.example.com")
+    assert store.exists("u3.example.com")
+    assert store.exists("www.baidu.com")
+
+    # 空集不报错
+    assert store.delete_batch(set()) == 0
+
+
 # -- 统计 ----------------------------------------------------------------
 
 def test_count_by_source(store: DomainStore) -> None:

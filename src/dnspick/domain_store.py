@@ -238,6 +238,18 @@ class DomainStore:
             )
             return cursor.rowcount > 0
 
+    def delete_batch(self, names: set[str]) -> int:
+        """批量删除非内置域名。返回成功删除数量。"""
+        if not names:
+            return 0
+        with self._conn() as conn:
+            placeholders = ",".join("?" * len(names))
+            cursor = conn.execute(
+                f"DELETE FROM domain WHERE name IN ({placeholders}) AND source!='builtin'",
+                tuple(names),
+            )
+            return cursor.rowcount
+
     # -- 统计 -------------------------------------------------------------
 
     def count_by_source(self) -> dict[str, int]:

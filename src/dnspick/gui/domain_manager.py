@@ -6,11 +6,12 @@
 
 from __future__ import annotations
 
+import threading
 import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -366,7 +367,7 @@ class DomainManagerDialog(QDialog):
     # -- 操作 -------------------------------------------------------------
 
     def _scan_browser(self) -> None:
-        """扫描浏览器历史并导入域名。"""
+        """在后台线程扫描浏览器历史，避免阻塞 UI。"""
         try:
             from dnspick.discover import mine_browser_history
         except ImportError:
@@ -375,38 +376,54 @@ class DomainManagerDialog(QDialog):
 
         self._btn_scan.setEnabled(False)
         self._btn_scan.setText("扫描中…")
+        self._scan_result: list[str] | None = None
+        self._scan_error: str | None = None
 
-        try:
-            found = mine_browser_history(min_hits=2)
-        except Exception as exc:
-            QMessageBox.critical(self, "扫描失败", f"扫描浏览器历史时出错：{exc}")
+        def _run() -> None:
+            try:
+                self._scan_result = mine_browser_history(min_hits=2)
+            except Exception as exc:
+                self._scan_error = str(exc)
+
+        scan_thread = threading.Thread(target=_run, daemon=True)
+        self._scan_timer = QTimer(self)
+        self._scan_timer.setInterval(100)
+
+        def _check() -> None:
+            if scan_thread.is_alive():
+                return
+            self._scan_timer.stop()
+            self._on_scan_finished()
+
+        self._scan_timer.timeout.connect(_check)
+        self._scan_timer.start()
+        scan_thread.start()
+
+    def _on_scan_finished(self) -> None:
+        """扫描线程完成后在主线程处理结果。"""
+        if self._scan_error:
+            QMessageBox.critical(self, "扫描失败", f"扫描浏览器历史时出错：{self._scan_error}")
             self._btn_scan.setEnabled(True)
             self._btn_scan.setText("扫描浏览器历史")
             return
 
+        found = self._scan_result
         if not found:
             QMessageBox.information(self, "无结果", "未找到浏览器历史记录。")
             self._btn_scan.setEnabled(True)
             self._btn_scan.setText("扫描浏览器历史")
             return
 
-        # 去重并写入 DB
+        cn_tlds = (".cn", ".com.cn", ".net.cn", ".org.cn", ".中国")
         existing = {it.name for it in self._items}
+        cn_new = [d for d in found if d not in existing and any(d.endswith(s) for s in cn_tlds)]
+        gl_new = [d for d in found if d not in existing and d not in cn_new]
+        skip_count = len(found) - len(cn_new) - len(gl_new)
         new_count = 0
-        skip_count = 0
-        for domain in found:
-            if domain in existing:
-                skip_count += 1
-                continue
-            # 猜测分组：国内常用 TLD 默认 CN
-            group = Group.GLOBAL
-            for suffix in (".cn", ".com.cn", ".net.cn", ".org.cn", ".中国"):
-                if domain.endswith(suffix):
-                    group = Group.CN
-                    break
-            self._store.upsert(domain, group, "history", "")
-            existing.add(domain)
-            new_count += 1
+        if cn_new:
+            new_count += self._store.upsert_batch(cn_new, Group.CN, "history", "")
+        if gl_new:
+            new_count += self._store.upsert_batch(gl_new, Group.GLOBAL, "history", "")
 
         QMessageBox.information(
             self,
@@ -446,22 +463,17 @@ class DomainManagerDialog(QDialog):
         for idx in self._table.selectedIndexes():
             rows.add(idx.row())
 
-        names_to_delete: list[str] = []
+        names_to_delete: set[str] = set()
         for row in rows:
             name_item = self._table.item(row, 1)
             if name_item:
-                names_to_delete.append(name_item.text())
+                names_to_delete.add(name_item.text())
 
         if not names_to_delete:
             return
 
-        deleted = 0
-        skipped = 0
-        for name in names_to_delete:
-            if self._store.delete(name):
-                deleted += 1
-            else:
-                skipped += 1
+        deleted = self._store.delete_batch(names_to_delete)
+        skipped = len(names_to_delete) - deleted
 
         if deleted > 0:
             self._load()
@@ -546,16 +558,17 @@ class DomainManagerDialog(QDialog):
             return
 
         existing = {it.name for it in self._items}
+        cn_new = [name for name, g in domains_to_import if name not in existing and g == "cn"]
+        gl_new = [name for name, g in domains_to_import if name not in existing and g == "global"]
+        skip_count = len(domains_to_import) - len(cn_new) - len(gl_new)
         new_count = 0
-        skip_count = 0
-        for name, group_str in domains_to_import:
-            if name in existing:
-                skip_count += 1
-                continue
-            group = Group(group_str) if group_str in ("cn", "global") else Group.CN
-            self._store.upsert(name, group, "manual", f"从 {Path(path).name} 导入")
-            existing.add(name)
-            new_count += 1
+        note = f"从 {Path(path).name} 导入"
+        if cn_new:
+            self._store.upsert_batch(cn_new, Group.CN, "manual", note)
+            new_count += len(cn_new)
+        if gl_new:
+            self._store.upsert_batch(gl_new, Group.GLOBAL, "manual", note)
+            new_count += len(gl_new)
 
         QMessageBox.information(
             self,
@@ -568,9 +581,13 @@ class DomainManagerDialog(QDialog):
         self.domains_changed.emit()
 
     def _on_accept(self) -> None:
-        """确定：将启用/禁用状态写回 DomainStore。"""
-        for item in self._items:
-            self._store.set_enabled(item.name, item.enabled)
+        """确定：将启用/禁用状态批量写回 DomainStore。"""
+        enabled_names = {item.name for item in self._items if item.enabled}
+        disabled_names = {item.name for item in self._items if not item.enabled}
+        if enabled_names:
+            self._store.set_enabled_batch(enabled_names, True)
+        if disabled_names:
+            self._store.set_enabled_batch(disabled_names, False)
         self.domains_changed.emit()
         self.accept()
 
