@@ -1,10 +1,7 @@
 """编排：把四个阶段串起来，并向调用方（CLI / GUI）汇报进度。
 
-阶段0 环境（公网IP / ECS 子网）
-阶段1 解析矩阵 + 劫持探针
-阶段2 IP 链路探测（TCP / 跳数 / ICMP / traceroute）
-阶段3 归属地
-阶段4 评分与结论
+阶段A 域名收集（环境探测 + 域名加载 + API自动发现 + 去重）
+阶段B DNS 测量（解析矩阵 + IP链路探测 + 归属地 + 评分与结论）
 """
 
 from __future__ import annotations
@@ -18,10 +15,13 @@ import urllib.request
 from collections.abc import Callable
 
 from dnspick import builtin
+from dnspick.api_discovery import ApiDomainDiscovery
 from dnspick.config import Config
+from dnspick.domain_store import DomainStore
 from dnspick.geoip import GeoIpResolver
 from dnspick.ipprobe import IpProber, is_ip
 from dnspick.models import Group, IpProbeResult, ResolveRecord, RunResult, RunSummary
+from dnspick.relation_store import RelationStore
 from dnspick.resolver import DnsResolver, parse_ecs_subnet
 from dnspick.scorer import Scorer, hijack_from_probes
 
@@ -80,8 +80,10 @@ def _to_subnet(ip: str) -> str | None:
 class Runner:
     """测量编排器。GUI 通过 request_cancel() 中断。"""
 
-    def __init__(self, config: Config, on_progress: ProgressCb | None = None) -> None:
+    def __init__(self, config: Config, domain_store: DomainStore | None = None,
+                 on_progress: ProgressCb | None = None) -> None:
         self.cfg = config
+        self.dom_store = domain_store or DomainStore()
         self.on_progress = on_progress
         self._task: asyncio.Task | None = None
         self._cancel_pending = False
@@ -131,24 +133,58 @@ class Runner:
         started = time.time()
         t = self.cfg.tunables
 
-        # -- 阶段0 --------------------------------------------------------
+        # === 阶段A: 域名收集 ============================================
         summary = RunSummary(started_at=started)
+
+        # A1. 环境探测
         self.emit("环境探测", 0, 1, "获取出口公网 IP")
         public_ip = await asyncio.to_thread(_detect_public_ip)
         summary.public_ip = public_ip
         ecs_subnet = _to_subnet(public_ip) if (public_ip and self.cfg.use_ecs) else None
-        # 拿到的出口 IP 未必能构成合法子网，校验不过就关掉 ECS，别让它拖垮整轮测量
         if ecs_subnet and parse_ecs_subnet(ecs_subnet) is None:
             ecs_subnet = None
         summary.ecs_subnet = ecs_subnet
-
-        servers = self.cfg.active_servers()
-        domains = self.cfg.active_domains(max_tier=t.max_tier)
-        summary.servers = len(servers)
-        summary.domains = len(domains)
         self.emit("环境探测", 1, 1, f"出口 IP: {public_ip or '未知'}")
 
-        # -- 阶段1 解析矩阵 ------------------------------------------------
+        # A2. 从数据库加载启用的域名
+        self.dom_store.init()
+        domains = self.dom_store.get_enabled()
+
+        servers = self.cfg.active_servers()
+        summary.servers = len(servers)
+        summary.domains = len(domains)
+
+        # A3. API 域名自动发现（可选）
+        if t.api_discovery_enabled:
+            self.emit("API发现", 0, 1, "从主站首页 + 证书透明日志发现关联域名")
+            store = RelationStore()
+            discovery = ApiDomainDiscovery(
+                store=store,
+                cache_days=t.api_discovery_cache_days,
+                html_timeout=t.api_discovery_html_timeout,
+                crt_timeout=t.api_discovery_crt_timeout,
+                max_per_source=t.api_discovery_max_per_source,
+                min_cache=t.api_discovery_min_cache,
+            )
+            results = await discovery.discover_all(domains)
+            extra = ApiDomainDiscovery.to_domain_specs(results, domains)
+            if extra:
+                domains = domains + extra
+                summary.api_discovered = len(extra)
+                self.emit(
+                    "API发现", 1, 1,
+                    f"发现 {len(extra)} 个关联域名，总域名 {len(domains)} 个",
+                )
+            else:
+                self.emit("API发现", 1, 1, "未发现新关联域名")
+
+        # A4. 阶段A 完成
+        self.emit("域名收集", len(domains), len(domains),
+                  f"共 {len(domains)} 个域名，开始 DNS 测量")
+
+        # === 阶段B: DNS 测量 ============================================
+
+        # B1. 解析矩阵
         resolver = DnsResolver(
             servers=servers,
             timeout=t.resolve_timeout,
@@ -177,7 +213,7 @@ class Runner:
                 if diffs:
                     ecs_support[server.id] = sum(diffs) / len(diffs) > 0.3
 
-        # -- 阶段2 IP 探测 -------------------------------------------------
+        # B2. IP 探测
         unique_ips = sorted({ip for r in records if r.ok for ip in r.answers if is_ip(ip)})
         summary.unique_ips = len(unique_ips)
         self.emit("IP 探测", 0, len(unique_ips), f"去重后 {len(unique_ips)} 个 IP")
@@ -201,7 +237,7 @@ class Runner:
         if summary.warning:
             self.emit("环境检测", 1, 1, summary.warning)
 
-        # -- 阶段3 归属地 --------------------------------------------------
+        # B3. 归属地
         geo = GeoIpResolver(
             enabled=t.geoip_enabled,
             mmdb_path=self.cfg.geoip_db,
@@ -215,7 +251,7 @@ class Runner:
         finally:
             geo.close()
 
-        # -- 阶段4 评分 ----------------------------------------------------
+        # B4. 评分
         self.emit("评分", 0, 1, "综合评分中")
         hijacks = hijack_from_probes(records)
         scorer = Scorer(t)

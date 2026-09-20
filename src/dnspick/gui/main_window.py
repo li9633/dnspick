@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
 )
 
 from dnspick.config import load_config
+from dnspick.domain_store import DomainStore
 from dnspick.gui.history import HistoryWindow
 from dnspick.gui.settings import SettingsDialog
 from dnspick.gui.worker import ProbeWorker
@@ -77,6 +78,8 @@ class MainWindow(QMainWindow):
         self.resize(1000, 720)
         self.config = load_config()
         self.config.load_saved()
+        self.dom_store = DomainStore()
+        self.dom_store.init()
         self.store = ResultStore()
         self.worker: ProbeWorker | None = None
         self._run_started_at: float = 0.0
@@ -350,19 +353,14 @@ class MainWindow(QMainWindow):
 
     # -- 域名摘要 ---------------------------------------------------------
     def _refresh_domain_summary(self) -> None:
-        ds = self.config.domains
-        t1 = len([d for d in ds if d.tier == 1])
-        t2 = len([d for d in ds if d.tier == 2])
-        t3 = len([d for d in ds if d.tier == 3])
+        ds = self.dom_store.get_all()
         cn = len([d for d in ds if d.group is Group.CN])
         gl = len([d for d in ds if d.group is Group.GLOBAL])
+        total = len(ds)
         self.dom_label.setText(
-            f"tier1 核心 <b>{t1}</b> 个 · "
-            f"tier2 常用 <b>{t2}</b> 个 · "
-            f"tier3 长尾 <b>{t3}</b> 个\n"
             f"国内 <b>{cn}</b> 个 · 国外 <b>{gl}</b> 个\n"
-            f"<span style='color:#888;font-size:11px'>默认只测 tier1；"
-            f"更多层级在设置中调整</span>"
+            f"共 <b>{total}</b> 个域名参与测量\n"
+            f"<span style='color:#888;font-size:11px'>在域名管理器中管理启用/禁用</span>"
         )
 
     # -- 交互 -------------------------------------------------------------
@@ -506,11 +504,12 @@ class MainWindow(QMainWindow):
         """延迟执行：先让 UI 刷新，再入库 + 弹窗。"""
         config_snapshot = {
             "profile": self.config.tunables.profile,
-            "tier": self.config.tunables.max_tier,
             "deep": self.chk_deep.isChecked(),
             "ecs": self.chk_ecs.isChecked(),
+            "api_discovery": self.config.tunables.api_discovery_enabled,
             "servers": result.summary.servers,
             "domains": result.summary.domains,
+            "api_discovered": result.summary.api_discovered,
         }
         try:
             self.last_mid = self.store.save(result, config_snapshot)

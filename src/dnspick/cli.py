@@ -105,21 +105,19 @@ def run(
     top: int = typer.Option(0, "--top", "-n", help="只显示前 N 名，0 表示全部"),
     protocol: str = typer.Option("", "--protocol", help="只测指定协议，逗号分隔：udp,tcp,dot,doh"),
     servers_file: Path | None = typer.Option(None, "--servers", help="自定义 DNS 清单 TOML"),
-    domains_file: Path | None = typer.Option(None, "--domains", help="自定义域名集 TOML"),
     cn_list: Path | None = typer.Option(None, "--cn-list", help="完整中国 IP 段列表（每行一条 CIDR）"),
     repeat: int = typer.Option(0, "--repeat", "-r", help="每个域名查询次数"),
     timeout: float = typer.Option(0, "--timeout", help="单次 DNS 超时（秒）"),
     deep: bool = typer.Option(False, "--deep", help="深度模式：对每个 IP 跑完整 traceroute（慢）"),
     no_icmp: bool = typer.Option(False, "--no-icmp", help="关闭 ICMP ping"),
     no_geoip: bool = typer.Option(False, "--no-geoip", help="关闭归属地查询"),
-    tier: int = typer.Option(1, "--tier", "-t", help="跑到第几层域名：1 核心 / 2 常用 / 3 长尾"),
     ecs: bool = typer.Option(False, "--ecs", help="启用 ECS 对比查询（需探测公网 IP）"),
     json_out: Path | None = typer.Option(None, "--json", help="结果输出为 JSON"),
     csv_out: Path | None = typer.Option(None, "--csv", help="结果输出为 CSV"),
     geoip_db: str | None = typer.Option(None, "--geoip-db", help="MaxMind mmdb 路径（可选）"),
 ) -> None:
     """跑一次完整测量。"""
-    cfg = load_config(servers_file, domains_file, cn_list)
+    cfg = load_config(servers_file, cn_list)
     cfg.use_ecs = ecs
     cfg.geoip_db = geoip_db
     t: Tunables = cfg.tunables.with_profile(profile)
@@ -133,7 +131,6 @@ def run(
         t.icmp_enabled = False
     if no_geoip:
         t.geoip_enabled = False
-    t.max_tier = max(1, min(tier, 3))
     if protocol:
         wanted = {p.strip().lower() for p in protocol.split(",")}
         keep = {s.id for s in cfg.servers if s.enabled and s.protocol.value in wanted}
@@ -178,8 +175,12 @@ def run(
     console.print(_build_table(shown))
     console.print(
         f"\n[dim]耗时 {result.summary.duration_s}s · 出口 IP {result.summary.public_ip or '未知'} · "
-        f"域名 {result.summary.domains} 个(tier≤{t.max_tier}) · 去重 IP {result.summary.unique_ips} 个[/]"
+        f"域名 {result.summary.domains} 个 · 去重 IP {result.summary.unique_ips} 个"
     )
+    if result.summary.api_discovered:
+        console.print(
+            f"[dim]API发现 +{result.summary.api_discovered} 个关联域名[/]"
+        )
     if result.summary.warning:
         console.print(f"\n[bold red]环境提示[/] {result.summary.warning}")
     _print_advice(shown)
@@ -201,8 +202,8 @@ def discover(
     no_seed: bool = typer.Option(False, "--no-seed", help="不用内置种子库"),
     online: bool = typer.Option(False, "--online", help="尝试拉取在线 Top 榜单（需外网）"),
     crawl: list[str] = typer.Option([], "--crawl", help="入口 URL，抓外链域名，可重复指定"),
-    tier1: int = typer.Option(60, "--tier1", help="浏览器历史里访问最多的 N 个算核心层"),
-    tier2: int = typer.Option(300, "--tier2", help="再往下 N 个算常用层"),
+    top_n: int = typer.Option(60, "--top-n", help="浏览器历史里访问最多的 N 个"),
+    top_ext: int = typer.Option(300, "--top-ext", help="再往下 N 个为扩展层"),
     min_hits: int = typer.Option(2, "--min-hits", help="浏览器历史最少访问次数"),
     max_items: int = typer.Option(0, "--max", help="最多写多少条，0 表示不限"),
 ) -> None:
@@ -224,8 +225,8 @@ def discover(
             use_seed=not no_seed,
             online=online,
             crawl_seeds=crawl_seeds or None,
-            tier1_size=tier1,
-            tier2_size=tier2,
+            tier1_size=top_n,
+            tier2_size=top_ext,
             min_hits=min_hits,
         )
     n = write_toml(rep, out, max_items=max_items)
@@ -236,10 +237,8 @@ def discover(
     if not rep.sources:
         console.print("[yellow]没有发现任何域名，检查参数或种子文件是否缺失[/]")
 
-    t1, t2, t3 = len(rep.by_tier(1)), len(rep.by_tier(2)), len(rep.by_tier(3))
-    console.print(f"\n分层统计：tier1 核心 [bold]{t1}[/] · tier2 常用 {t2} · tier3 长尾 {t3}")
-    console.print("\n[dim]默认只跑 tier1。想跑更多：dnspick run --tier 2[/]")
-    console.print("[dim]建议先把 tier1 里不认识的域名删掉，再跑测量。[/]")
+    console.print(f"\n共发现 {len(rep.items)} 个域名，已写入 {n} 条")
+    console.print("[dim]在域名管理器中管理启用/禁用的域名[/]")
 
 
 @app.command()
@@ -285,6 +284,7 @@ def _to_dict(result) -> dict:
             "servers": result.summary.servers,
             "domains": result.summary.domains,
             "unique_ips": result.summary.unique_ips,
+            "api_discovered": result.summary.api_discovered,
             "warning": result.summary.warning,
         },
         "servers": [

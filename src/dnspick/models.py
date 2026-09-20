@@ -57,20 +57,11 @@ class DnsServer:
 
 @dataclass(frozen=True)
 class DomainSpec:
-    """一个待测域名。
-
-    tier 是分层：
-        1 = 核心层（CDN 强调度 + 你最常访问的站点）——默认只跑这一层。
-           真正决定「就近调度好不好」的就是这一层。
-        2 = 常用层（主流站点）——想看更全面的国内/国外表现时加上。
-        3 = 长尾层（自动发现的长尾域名）——绝大多数静态小站解析到哪都一样，
-           对评分没有区分度，只会稀释信号并把测量时间拉长，默认不跑。
-    """
+    """一个待测域名。"""
 
     name: str
     group: Group
     note: str = ""
-    tier: int = 1
 
 
 class ResolveStatus(str, Enum):
@@ -200,6 +191,7 @@ class RunSummary:
     servers: int = 0
     domains: int = 0
     unique_ips: int = 0
+    api_discovered: int = 0  # API域名自动发现新增的域名数
 
 
 @dataclass

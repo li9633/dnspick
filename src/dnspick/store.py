@@ -33,6 +33,7 @@ CREATE TABLE IF NOT EXISTS measurement (
     servers_cnt INTEGER NOT NULL DEFAULT 0,
     domains_cnt INTEGER NOT NULL DEFAULT 0,
     unique_ips  INTEGER NOT NULL DEFAULT 0,
+    api_discovered INTEGER NOT NULL DEFAULT 0,
     warning     TEXT DEFAULT '',
     config_json TEXT DEFAULT '{}'
 );
@@ -155,8 +156,8 @@ class ResultStore:
             conn.execute(
                 """INSERT INTO measurement
                    (id, created_at, profile, public_ip, ecs_subnet, duration_s,
-                    servers_cnt, domains_cnt, unique_ips, warning, config_json)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    servers_cnt, domains_cnt, unique_ips, api_discovered, warning, config_json)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     mid,
                     now.strftime("%Y-%m-%dT%H:%M:%S"),
@@ -167,6 +168,7 @@ class ResultStore:
                     s.servers,
                     s.domains,
                     s.unique_ips,
+                    s.api_discovered,
                     s.warning,
                     json.dumps(config_snapshot or {}, ensure_ascii=False),
                 ),
@@ -388,8 +390,8 @@ class ResultStore:
             conn.execute(
                 """INSERT INTO measurement
                    (id, created_at, profile, public_ip, ecs_subnet, duration_s,
-                    servers_cnt, domains_cnt, unique_ips, warning, config_json)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    servers_cnt, domains_cnt, unique_ips, api_discovered, warning, config_json)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     mid,
                     ts,
@@ -397,9 +399,10 @@ class ResultStore:
                     s.get("public_ip"),
                     s.get("ecs_subnet"),
                     s.get("duration_s", 0),
-                    cfg.get("servers") or s.get("servers", 0),
-                    cfg.get("domains") or s.get("domains", 0),
+                    s.get("servers", 0),
+                    s.get("domains", 0),
                     s.get("unique_ips", 0),
+                    s.get("api_discovered", 0),
                     s.get("warning", ""),
                     json.dumps(cfg, ensure_ascii=False),
                 ),

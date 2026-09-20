@@ -94,14 +94,17 @@ def test_write_toml_roundtrip(tmp_path: Path) -> None:
     n = write_toml(rep, out)
     assert n == len(rep.items)
 
-    from dnspick.config import load_config
+    # 验证 TOML 文件能被正确解析
+    import tomllib
 
-    cfg = load_config(None, out)
-    assert len(cfg.domains) == n
-    # tier 必须被正确读回，否则 --tier 过滤形同虚设
-    tier1 = cfg.active_domains(max_tier=1)
-    assert len(tier1) == len(rep.by_tier(1))
-    assert all(d.tier == 1 for d in tier1)
+    data = tomllib.loads(out.read_text(encoding="utf-8"))
+    domains = data.get("domain", [])
+    assert len(domains) == n
+    for d in domains:
+        assert "name" in d
+        assert "group" in d
+        assert "note" in d
+        assert "tier" not in d, "TOML 不应再包含 tier"
 
 
 def test_write_toml_respects_max_items(tmp_path: Path) -> None:

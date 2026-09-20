@@ -348,6 +348,11 @@ def builtin_domains() -> list[DomainSpec]:
     return list(_DOMAINS)
 
 
+def seed_domains() -> list[DomainSpec]:
+    """内置域名种子：用于 DomainStore 首次初始化数据库。"""
+    return list(_DOMAINS)
+
+
 def builtin_cn_prefixes() -> tuple[str, ...]:
     return _CN_PREFIXES
 

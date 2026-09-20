@@ -12,7 +12,7 @@ except ModuleNotFoundError:  # pragma: no cover - 仅在旧解释器上生效
     import tomli as tomllib  # type: ignore[no-redef]
 
 from dnspick import builtin
-from dnspick.models import DnsServer, DomainSpec, Group, Protocol
+from dnspick.models import DnsServer, Protocol
 
 _USER_CONFIG_DIR = Path(".dnspick")
 _USER_CONFIG_FILE = _USER_CONFIG_DIR / "config.json"
@@ -51,7 +51,13 @@ class Tunables:
     hijack_penalty: float = 60.0  # 检测到劫持的总分扣减
     pollution_penalty: float = 25.0
 
-    max_tier: int = 1  # 默认只跑核心层：长尾域名没有区分度，只会拖慢测量
+    # API 域名自动发现（默认关闭）
+    api_discovery_enabled: bool = False
+    api_discovery_cache_days: int = 7
+    api_discovery_html_timeout: float = 5.0
+    api_discovery_crt_timeout: float = 8.0
+    api_discovery_max_per_source: int = 60
+    api_discovery_min_cache: int = 3
 
     cn_weight: float = 0.7  # 总分里国内组的权重
     global_weight: float = 0.3
@@ -92,7 +98,6 @@ class Tunables:
 class Config:
     tunables: Tunables = field(default_factory=Tunables)
     servers: list[DnsServer] = field(default_factory=builtin.builtin_servers)
-    domains: list[DomainSpec] = field(default_factory=builtin.builtin_domains)
     extra_cn_prefixes: list[str] = field(default_factory=list)
     geoip_db: str | None = None  # mmdb 路径（可选）
     use_ecs: bool = False  # 是否启用 ECS 对比查询（需先探测公网 IP）
@@ -103,18 +108,6 @@ class Config:
 
     def active_servers(self) -> list[DnsServer]:
         return [s for s in self.servers if s.enabled]
-
-    def active_domains(
-        self,
-        groups: set[Group] | None = None,
-        max_tier: int | None = None,
-    ) -> list[DomainSpec]:
-        ds = self.domains
-        if groups:
-            ds = [d for d in ds if d.group in groups]
-        if max_tier is not None:
-            ds = [d for d in ds if d.tier <= max_tier]
-        return ds
 
     def save(self) -> None:
         """持久化当前配置到用户目录。"""
@@ -145,10 +138,15 @@ class Config:
                 "w_proximity": t.w_proximity,
                 "hijack_penalty": t.hijack_penalty,
                 "pollution_penalty": t.pollution_penalty,
-                "max_tier": t.max_tier,
                 "cn_weight": t.cn_weight,
                 "global_weight": t.global_weight,
                 "profile": t.profile,
+                "api_discovery_enabled": t.api_discovery_enabled,
+                "api_discovery_cache_days": t.api_discovery_cache_days,
+                "api_discovery_html_timeout": t.api_discovery_html_timeout,
+                "api_discovery_crt_timeout": t.api_discovery_crt_timeout,
+                "api_discovery_max_per_source": t.api_discovery_max_per_source,
+                "api_discovery_min_cache": t.api_discovery_min_cache,
             },
             "use_ecs": self.use_ecs,
             "enabled_servers": [s.id for s in self.servers if s.enabled],
@@ -176,8 +174,11 @@ class Config:
                 "icmp_count", "icmp_timeout_s", "icmp_concurrency",
                 "deep_traceroute", "geoip_enabled",
                 "w_speed", "w_path", "w_stability", "w_proximity",
-                "hijack_penalty", "pollution_penalty", "max_tier",
+                "hijack_penalty", "pollution_penalty",
                 "cn_weight", "global_weight",
+                "api_discovery_enabled", "api_discovery_cache_days",
+                "api_discovery_html_timeout", "api_discovery_crt_timeout",
+                "api_discovery_max_per_source", "api_discovery_min_cache",
             ):
                 if key in td:
                     setattr(t, key, td[key])
@@ -201,7 +202,6 @@ def _load_file(path: Path) -> dict:
 
 def load_config(
     servers_file: Path | None = None,
-    domains_file: Path | None = None,
     cn_list: Path | None = None,
 ) -> Config:
     """从 TOML 载入覆盖项，缺失则用内置值。"""
@@ -233,24 +233,6 @@ def load_config(
             cfg.servers = custom + [s for s in cfg.servers if s.address not in seen]
         if data.get("enabled_only"):
             cfg.servers = custom
-
-    if domains_file and domains_file.exists():
-        data = _load_file(domains_file)
-        doms = []
-        for item in data.get("domain", []):
-            try:
-                doms.append(
-                    DomainSpec(
-                        name=item["name"],
-                        group=Group(item.get("group", "cn")),
-                        note=item.get("note", ""),
-                        tier=int(item.get("tier", 1)),
-                    )
-                )
-            except (KeyError, ValueError):
-                continue
-        if doms:
-            cfg.domains = doms
 
     if cn_list and cn_list.exists():
         cfg.extra_cn_prefixes = [

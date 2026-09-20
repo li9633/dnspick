@@ -494,12 +494,8 @@ def write_toml(rep: DiscoverReport, out: Path, max_items: int = 0) -> int:
     lines: list[str] = [
         "# dnspick 域名集（由 dnspick discover 生成）",
         "#",
-        "# tier 说明：",
-        "#   1 = 核心层，默认只跑这层 —— CDN 调度最敏感 + 你最常访问的站点",
-        "#   2 = 常用层，想看更全面的国内外表现时加 --tier 2",
-        "#   3 = 长尾层，对评分基本没有区分度，默认不跑",
-        "#",
         "# group 只有 cn / global 两种取值，决定计入哪个分组。",
+        "# 启用/禁用状态由域名管理器在 GUI 中控制。",
         "",
     ]
     for d in items:
@@ -507,7 +503,6 @@ def write_toml(rep: DiscoverReport, out: Path, max_items: int = 0) -> int:
         lines.append("[[domain]]")
         lines.append(f'name = "{d.name}"')
         lines.append(f'group = "{d.group}"')
-        lines.append(f"tier = {d.tier}")
         lines.append(f'note = "{note}"')
         lines.append("")
     out.parent.mkdir(parents=True, exist_ok=True)
