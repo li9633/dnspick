@@ -94,17 +94,16 @@ def test_write_toml_roundtrip(tmp_path: Path) -> None:
     n = write_toml(rep, out)
     assert n == len(rep.items)
 
-    # 验证 TOML 文件能被正确解析
+    # 验证 TOML 文件能被正确解析，格式为 [domains] cn = [...] global = [...]
     import tomllib
 
     data = tomllib.loads(out.read_text(encoding="utf-8"))
-    domains = data.get("domain", [])
-    assert len(domains) == n
-    for d in domains:
-        assert "name" in d
-        assert "group" in d
-        assert "note" in d
-        assert "tier" not in d, "TOML 不应再包含 tier"
+    doms = data.get("domains", {})
+    cn = doms.get("cn", [])
+    gl = doms.get("global", [])
+    assert len(cn) + len(gl) == n, f"{len(cn) + len(gl)} != {n}"
+    for d in cn + gl:
+        assert isinstance(d, str)
 
 
 def test_write_toml_respects_max_items(tmp_path: Path) -> None:

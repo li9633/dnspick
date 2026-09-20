@@ -12,6 +12,7 @@ except ModuleNotFoundError:  # pragma: no cover - 仅在旧解释器上生效
     import tomli as tomllib  # type: ignore[no-redef]
 
 from dnspick import builtin
+from dnspick.log import log
 from dnspick.models import DnsServer, Protocol
 
 _USER_CONFIG_DIR = Path(".dnspick")
@@ -154,6 +155,7 @@ class Config:
         _USER_CONFIG_FILE.write_text(
             json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8",
         )
+        log.debug("配置已保存")
 
     def load_saved(self) -> None:
         """从用户目录恢复上次保存的配置。"""
@@ -162,6 +164,7 @@ class Config:
         try:
             data = json.loads(_USER_CONFIG_FILE.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
+            log.warn("配置文件损坏，使用默认设置")
             return
 
         td = data.get("tunables", {})
@@ -195,9 +198,13 @@ class Config:
             self.servers = [s.with_enabled(s.id in enabled_ids) for s in self.servers]
 
 
-def _load_file(path: Path) -> dict:
-    with path.open("rb") as fh:
-        return tomllib.load(fh)
+def _load_file(path: Path) -> dict | None:
+    try:
+        with path.open("rb") as fh:
+            return tomllib.load(fh)
+    except Exception as exc:
+        log.warn(f"无法解析 TOML 文件 {path}: {exc}")
+        return None
 
 
 def load_config(
@@ -209,30 +216,33 @@ def load_config(
 
     if servers_file and servers_file.exists():
         data = _load_file(servers_file)
-        custom = []
-        for item in data.get("server", []):
-            try:
-                custom.append(
-                    DnsServer(
-                        id=item.get("id") or item["address"],
-                        name=item.get("name", item["address"]),
-                        address=item["address"],
-                        protocol=Protocol(item.get("protocol", "udp")),
-                        vendor=item.get("vendor", ""),
-                        region=item.get("region", "unknown"),
-                        port=int(item.get("port", 53)),
-                        hostname=item.get("hostname"),
-                        tags=tuple(item.get("tags", ())),
-                        enabled=bool(item.get("enabled", True)),
+        if data is None:
+            log.warn("服务器文件解析失败，使用内置列表")
+        else:
+            custom = []
+            for item in data.get("server", []):
+                try:
+                    custom.append(
+                        DnsServer(
+                            id=item.get("id") or item["address"],
+                            name=item.get("name", item["address"]),
+                            address=item["address"],
+                            protocol=Protocol(item.get("protocol", "udp")),
+                            vendor=item.get("vendor", ""),
+                            region=item.get("region", "unknown"),
+                            port=int(item.get("port", 53)),
+                            hostname=item.get("hostname"),
+                            tags=tuple(item.get("tags", ())),
+                            enabled=bool(item.get("enabled", True)),
+                        )
                     )
-                )
-            except (KeyError, ValueError):
-                continue
-        if custom:
-            seen = {s.address for s in custom}
-            cfg.servers = custom + [s for s in cfg.servers if s.address not in seen]
-        if data.get("enabled_only"):
-            cfg.servers = custom
+                except (KeyError, ValueError):
+                    continue
+            if custom:
+                seen = {s.address for s in custom}
+                cfg.servers = custom + [s for s in cfg.servers if s.address not in seen]
+            if data.get("enabled_only"):
+                cfg.servers = custom
 
     if cn_list and cn_list.exists():
         cfg.extra_cn_prefixes = [

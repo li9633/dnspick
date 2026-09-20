@@ -203,9 +203,3 @@ def test_get_config():
     mid = store.save(_make_fake_result(), cfg)
     loaded = store.get_config(mid)
     assert loaded == cfg
-
-
-def test_migrate_from_json():
-    store = ResultStore(Path(tempfile.mkdtemp()) / "test.db")
-    # 迁移空的/不存在的文件不报错
-    assert store.migrate_from_json(Path("/nonexistent/path.json")) == 0

@@ -19,6 +19,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
 from dnspick import builtin
+from dnspick.log import log
 from dnspick.models import IpGeo
 
 _BATCH_URL = "http://ip-api.com/batch?fields=status,countryCode,regionName,city,isp,as,query"
@@ -72,7 +73,8 @@ class GeoIpResolver:
             return None
         try:
             return maxminddb.open_database(path)
-        except Exception:
+        except Exception as exc:
+            log.warn(f"无法打开 mmdb 数据库 {path}: {exc}")
             return None
 
     def _from_mmdb(self, ip: str) -> IpGeo | None:
@@ -146,7 +148,8 @@ class GeoIpResolver:
         try:
             with urllib.request.urlopen(req, timeout=_TIMEOUT) as resp:  # noqa: S310
                 data = json.loads(resp.read().decode("utf-8", "replace"))
-        except (urllib.error.URLError, TimeoutError, ValueError, OSError):
+        except (urllib.error.URLError, TimeoutError, ValueError, OSError) as exc:
+            log.debug(f"在线 GeoIP 查询失败: {exc}")
             return {}
 
         out: dict[str, IpGeo] = {}

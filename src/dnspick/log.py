@@ -13,7 +13,6 @@ from __future__ import annotations
 import enum
 import inspect
 import logging
-import os
 import sys
 from datetime import UTC, datetime
 from logging.handlers import RotatingFileHandler
@@ -129,26 +128,48 @@ class _LogManager(QObject):
     def _caller_module() -> str:
         """从调用栈提取调用者模块的短路径。
 
+        逐帧上溯，跳过 log.py 自身以及 stdlib / site-packages，找到第一个
+        位于项目 src/ 目录内的帧。
+
         输出示例：dnspick.runner, gui.main_window, cli
         """
         frame = inspect.currentframe()
-        # 跳过内部栈帧：_caller_module → _emit → info/warn/error → 调用者
-        for _ in range(4):
-            frame = frame.f_back if frame else None
+        _log_file = Path(__file__).resolve()
+        _pkg_root = _PACKAGE_ROOT.resolve()
+        while frame is not None:
+            fname = Path(frame.f_code.co_filename).resolve()
+            # 跳过 log.py 自身
+            if fname == _log_file:
+                frame = frame.f_back
+                continue
+            # 在项目 src/ 内 → 这就是调用者
+            try:
+                fname.relative_to(_pkg_root)
+                break
+            except ValueError:
+                pass
+            # 在 CPython 标准库或 site-packages 内 → 继续上溯
+            try:
+                fname.relative_to(sys.prefix)
+                # 是解释器自带文件（如 asyncio, logging）→ 跳过
+                frame = frame.f_back
+                continue
+            except ValueError:
+                pass
+            # 其他位置（用户脚本 / 测试）→ 接受它
+            break
         if frame is None:
             return "?"
 
-        fname = frame.f_code.co_filename
+        fname = Path(frame.f_code.co_filename).resolve()
         try:
-            rel = os.path.relpath(fname, _PACKAGE_ROOT)
+            rel = fname.relative_to(_pkg_root).as_posix()
         except ValueError:
-            rel = fname
-        # 去掉 .py 后缀，统一斜杠为点
-        modpath = rel.replace("\\", "/").replace(".py", "").replace("/", ".")
-        # 如果包含 src/，截断到包名之后
-        if "dnspick." in modpath:
-            idx = modpath.index("dnspick.")
-            modpath = modpath[idx:]
+            # 不在 src/ 内 → 使用文件名（不含扩展名）作为标识
+            stem = fname.stem
+            return stem if stem != "<string>" else "?"
+        # 去掉 .py 后缀，路径分隔符 → 点
+        modpath = rel.replace(".py", "").replace("/", ".")
         return modpath
 
 

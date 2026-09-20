@@ -20,7 +20,6 @@ from typing import Any
 from dnspick.models import RunResult
 
 DB_PATH = Path("history") / "dnspick.db"
-OLD_JSON_PATH = Path("history") / "history.json"
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS measurement (
@@ -345,121 +344,6 @@ class ResultStore:
             return json.loads(row[0])
         except (json.JSONDecodeError, TypeError):
             return {}
-
-    # -- 旧数据迁移 -------------------------------------------------------
-    def migrate_from_json(self, json_path: Path | None = None) -> int:
-        """从旧的 history.json 迁移数据到 SQLite。返回迁移条数。"""
-        path = json_path or OLD_JSON_PATH
-        if not path.exists():
-            return 0
-        try:
-            entries = json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            return 0
-        if not isinstance(entries, list):
-            return 0
-
-        self.init()
-        migrated = 0
-        for entry in entries:
-            mid = entry.get("id", "")
-            if not mid:
-                continue
-            with self._conn() as conn:
-                exists = conn.execute(
-                    "SELECT 1 FROM measurement WHERE id = ?", (mid,)
-                ).fetchone()
-                if exists:
-                    continue
-
-            self._migrate_entry(entry)
-            migrated += 1
-
-        if migrated > 0:
-            bak = path.with_suffix(".json.bak")
-            path.rename(bak)
-        return migrated
-
-    def _migrate_entry(self, entry: dict[str, Any]) -> None:
-        s = entry.get("summary", {})
-        cfg = entry.get("config", {})
-        mid = entry.get("id", "")
-        ts = entry.get("timestamp", mid[:16] if mid else "")
-
-        with self._conn() as conn:
-            conn.execute(
-                """INSERT INTO measurement
-                   (id, created_at, profile, public_ip, ecs_subnet, duration_s,
-                    servers_cnt, domains_cnt, unique_ips, api_discovered, warning, config_json)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                (
-                    mid,
-                    ts,
-                    cfg.get("profile", ""),
-                    s.get("public_ip"),
-                    s.get("ecs_subnet"),
-                    s.get("duration_s", 0),
-                    s.get("servers", 0),
-                    s.get("domains", 0),
-                    s.get("unique_ips", 0),
-                    s.get("api_discovered", 0),
-                    s.get("warning", ""),
-                    json.dumps(cfg, ensure_ascii=False),
-                ),
-            )
-
-            for r in entry.get("ranked", []):
-                cn = r.get("cn", {}) or {}
-                gl = r.get("global", {}) or {}
-                ecs_raw = r.get("ecs_supported")
-                ecs_val: int | None = None
-                if ecs_raw is True:
-                    ecs_val = 1
-                elif ecs_raw is False:
-                    ecs_val = 0
-
-                conn.execute(
-                    """INSERT INTO server_score
-                       (measurement_id, server_id, server_name, address, protocol,
-                        vendor, region, tags, total_score, verdict, advice,
-                        cn_delay_ms, gl_delay_ms, cn_hops, gl_hops,
-                        cn_success_rate, gl_success_rate, cn_reach_rate, gl_reach_rate,
-                        cn_proximity, gl_proximity, cn_score, gl_score,
-                        cn_stability, gl_stability, cn_speed, gl_speed,
-                        cn_path, gl_path, dns_rtt_p50_ms, hijack, ecs_supported, polluted)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
-                               ?, ?, ?, ?, ?, ?, ?, ?,
-                               ?, ?, ?, ?,
-                               0, 0, 0, 0,
-                               0, 0, NULL, ?, ?, ?, 0)""",
-                    (
-                        mid,
-                        r.get("id", ""),
-                        r.get("name", ""),
-                        r.get("address", ""),
-                        r.get("protocol", ""),
-                        "",  # vendor not in old JSON
-                        "",  # region not in old JSON
-                        "",  # tags not in old JSON
-                        r.get("total", 0),
-                        r.get("verdict", "avoid"),
-                        r.get("advice", ""),
-                        cn.get("tcp_p50_ms"),
-                        gl.get("tcp_p50_ms"),
-                        cn.get("hop_avg"),
-                        gl.get("hop_avg"),
-                        cn.get("resolve_success_rate"),
-                        gl.get("resolve_success_rate"),
-                        cn.get("ip_reachable_rate"),
-                        gl.get("ip_reachable_rate"),
-                        cn.get("proximity"),
-                        gl.get("proximity"),
-                        cn.get("score", 0),
-                        gl.get("score", 0),
-                        1 if r.get("hijack") else 0,
-                        ecs_val,
-                    ),
-                )
 
     # -- 筛选子句构造 -----------------------------------------------------
     @staticmethod

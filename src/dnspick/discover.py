@@ -491,20 +491,19 @@ def write_toml(rep: DiscoverReport, out: Path, max_items: int = 0) -> int:
     if max_items and len(items) > max_items:
         items = items[:max_items]
 
-    lines: list[str] = [
-        "# dnspick 域名集（由 dnspick discover 生成）",
-        "#",
-        "# group 只有 cn / global 两种取值，决定计入哪个分组。",
-        "# 启用/禁用状态由域名管理器在 GUI 中控制。",
-        "",
-    ]
+    cn_domains: list[str] = []
+    gl_domains: list[str] = []
     for d in items:
-        note = d.note or d.source
-        lines.append("[[domain]]")
-        lines.append(f'name = "{d.name}"')
-        lines.append(f'group = "{d.group}"')
-        lines.append(f'note = "{note}"')
-        lines.append("")
+        if d.group == "global":
+            gl_domains.append(d.name)
+        else:
+            cn_domains.append(d.name)
+
+    lines: list[str] = ["[domains]"]
+    for label, doms in (("cn", cn_domains), ("global", gl_domains)):
+        quoted = ", ".join(f'"{d}"' for d in doms)
+        lines.append(f"{label} = [{quoted}]")
+
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines) + "\n", encoding="utf-8")
     return len(items)

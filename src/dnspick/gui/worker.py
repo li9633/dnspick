@@ -14,6 +14,7 @@ import traceback
 from PySide6.QtCore import QThread, Signal
 
 from dnspick.config import Config
+from dnspick.log import log
 from dnspick.models import RunResult
 from dnspick.runner import Runner
 
@@ -44,16 +45,20 @@ class ProbeWorker(QThread):
             self.succeeded.emit(result)
         except asyncio.CancelledError:
             self.failed.emit("已取消")
+            log.info("测量任务已取消")
         except RuntimeError:
             # loop.stop() 被调用：强制中断
             if self._force_stopped:
                 self.failed.emit("已取消")
+                log.info("测量任务已强制中止")
             else:
                 raise
         except Exception as exc:  # noqa: BLE001 - 需要把任何异常带回主线程展示
             # 注意：不要给 format_exc 加 limit。之前用 limit=6 只保留最外层 6 帧，
             # 真正出错的深层栈（如 dns/edns.py）被截掉，日志里只剩一串无关帧，难以定位。
-            self.failed.emit(f"{type(exc).__name__}: {exc}\n{traceback.format_exc()}")
+            tb = traceback.format_exc()
+            log.error(f"测量异常: {type(exc).__name__}: {exc}")
+            self.failed.emit(f"{type(exc).__name__}: {exc}\n{tb}")
         finally:
             with contextlib.suppress(Exception):
                 loop.run_until_complete(loop.shutdown_asyncgens())

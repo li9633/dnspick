@@ -34,6 +34,7 @@ from PySide6.QtWidgets import (
 
 from dnspick.api_discovery import ApiDomainDiscovery
 from dnspick.domain_store import DomainStore
+from dnspick.log import log
 from dnspick.models import Group
 from dnspick.relation_store import RelationStore
 
@@ -447,6 +448,8 @@ class DomainManagerDialog(QDialog):
             f"  · 已存在 {skip_count} 个",
         )
 
+        log.info(f"浏览器扫描: 发现 {len(found)} 个域名, 新增 {new_count} 个")
+
         self._btn_scan.setEnabled(True)
         self._btn_scan.setText("扫描浏览器历史")
         self._load()
@@ -471,6 +474,7 @@ class DomainManagerDialog(QDialog):
         self._store.upsert(name, group, "manual", "")
         self._load()
         self.domains_changed.emit()
+        log.info(f"手动添加域名: {name} ({group.value})")
 
     def _delete_selected(self) -> None:
         rows = set()
@@ -492,6 +496,7 @@ class DomainManagerDialog(QDialog):
         if deleted > 0:
             self._load()
             self.domains_changed.emit()
+            log.info(f"删除了 {deleted} 个域名")
 
         if skipped > 0:
             QMessageBox.information(
@@ -559,6 +564,7 @@ class DomainManagerDialog(QDialog):
 
         if error:
             QMessageBox.critical(self, "发现失败", f"API 域名发现失败：{error}")
+            log.error(f"API 发现 {name} 失败: {error}")
             return
 
         if result is None:
@@ -628,24 +634,16 @@ class DomainManagerDialog(QDialog):
                 data = tomllib.load(f)
         except Exception as exc:
             QMessageBox.critical(self, "导入失败", f"读取 TOML 文件失败：{exc}")
+            log.warn(f"TOML 导入失败 {path}: {exc}")
             return
 
         domains_to_import: list[tuple[str, str]] = []
 
-        # 支持两种格式：
-        # 1) [[domain]] name = "..." group = "cn"   (旧格式)
-        # 2) [domains] cn = ["..."] global = ["..."] (discover 输出格式)
-        if "domain" in data:
-            for entry in data.get("domain", []):
-                if isinstance(entry, dict) and "name" in entry:
-                    g = entry.get("group", "cn")
-                    domains_to_import.append((entry["name"], g))
-        elif "domains" in data:
-            doms = data["domains"]
-            for g in ("cn", "global"):
-                for d in doms.get(g, []):
-                    if isinstance(d, str):
-                        domains_to_import.append((d, g))
+        doms = data.get("domains", {})
+        for g in ("cn", "global"):
+            for d in doms.get(g, []):
+                if isinstance(d, str):
+                    domains_to_import.append((d, g))
 
         if not domains_to_import:
             QMessageBox.information(self, "导入结果", "TOML 文件中未找到域名条目。")
@@ -663,6 +661,8 @@ class DomainManagerDialog(QDialog):
         if gl_new:
             self._store.upsert_batch(gl_new, Group.GLOBAL, "manual", note)
             new_count += len(gl_new)
+
+        log.info(f"TOML 导入: {new_count} 新, {skip_count} 重复, 来源 {Path(path).name}")
 
         QMessageBox.information(
             self,

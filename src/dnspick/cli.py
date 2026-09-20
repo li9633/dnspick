@@ -181,9 +181,11 @@ def run(
         try:
             result = asyncio.run(runner.run())
         except KeyboardInterrupt:
+            log.info("测量已取消")
             err_console.print("[yellow]已取消[/]")
             raise typer.Exit(130) from None
         except asyncio.CancelledError:
+            log.info("测量已取消")
             err_console.print("[yellow]已取消[/]")
             raise typer.Exit(130) from None
 

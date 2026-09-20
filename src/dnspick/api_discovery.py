@@ -22,6 +22,7 @@ import ssl
 import urllib.request
 from dataclasses import dataclass, field
 
+from dnspick.log import log
 from dnspick.models import DomainSpec, Group
 from dnspick.relation_store import RelationStore
 
@@ -321,8 +322,10 @@ class ApiDomainDiscovery:
             domains.discard(main_domain)
             if len(domains) > self.max_per_source:
                 domains = set(sorted(domains)[:self.max_per_source])
+            log.debug(f"HTML 发现 {main_domain}: {len(domains)} 个关联域名")
             return domains, True, ""
         except Exception as e:
+            log.warn(f"HTML 发现失败 {main_domain}: {e}")
             return set(), False, str(e)
 
     # -- 策略2 ------------------------------------------------------------
@@ -335,8 +338,10 @@ class ApiDomainDiscovery:
             domains.discard(main_domain)
             if len(domains) > self.max_per_source:
                 domains = set(sorted(domains)[:self.max_per_source])
+            log.debug(f"crt.sh 发现 {main_domain}: {len(domains)} 个关联域名")
             return domains, True, ""
         except Exception as e:
+            log.warn(f"crt.sh 查询失败 {main_domain}: {e}")
             return set(), False, str(e)
 
     # -- 主入口 ----------------------------------------------------------
@@ -348,6 +353,7 @@ class ApiDomainDiscovery:
         """
         cached = self._check_cache(main_domain)
         if cached is not None:
+            log.debug(f"API 发现 {main_domain}: 命中缓存 ({len(cached)} 个)")
             return DiscoveryResult(
                 main_domain=main_domain,
                 html_domains=cached,
@@ -373,6 +379,12 @@ class ApiDomainDiscovery:
         result.crt_error = err2
         if ok2 and crt_doms:
             self.store.upsert_batch(main_domain, crt_doms, "crt_sh")
+
+        total = len(result.all_domains)
+        if total:
+            log.info(f"API 发现 {main_domain}: 共 {total} 个关联域名")
+        elif not result.from_cache:
+            log.debug(f"API 发现 {main_domain}: 无关联域名")
 
         return result
 
