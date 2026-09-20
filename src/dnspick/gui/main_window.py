@@ -34,10 +34,12 @@ from PySide6.QtWidgets import (
 
 from dnspick.config import load_config
 from dnspick.domain_store import DomainStore
+from dnspick.gui.domain_manager import DomainManagerDialog
 from dnspick.gui.history import HistoryWindow
 from dnspick.gui.settings import SettingsDialog
 from dnspick.gui.worker import ProbeWorker
 from dnspick.models import Group, Protocol, RunResult
+from dnspick.relation_store import RelationStore
 from dnspick.store import ResultStore
 
 
@@ -191,7 +193,7 @@ class MainWindow(QMainWindow):
 
         btn_row = QHBoxLayout()
         self.btn_manage_domains = QPushButton("管理域名…")
-        self.btn_manage_domains.clicked.connect(self.load_domains_file)
+        self.btn_manage_domains.clicked.connect(self._open_domain_manager)
         btn_row.addWidget(self.btn_manage_domains)
         btn_row.addStretch(1)
         dom_layout.addLayout(btn_row)
@@ -229,8 +231,8 @@ class MainWindow(QMainWindow):
         menu = self.menuBar().addMenu("文件")
         act_load = QAction("载入自定义服务器清单…", self)
         act_load.triggered.connect(self.load_servers_file)
-        act_dom = QAction("载入自定义域名集…", self)
-        act_dom.triggered.connect(self.load_domains_file)
+        act_dom = QAction("管理域名集…", self)
+        act_dom.triggered.connect(self._open_domain_manager)
         act_quit = QAction("退出", self)
         act_quit.triggered.connect(self.close)
         menu.addAction(act_load)
@@ -353,14 +355,29 @@ class MainWindow(QMainWindow):
 
     # -- 域名摘要 ---------------------------------------------------------
     def _refresh_domain_summary(self) -> None:
-        ds = self.dom_store.get_all()
+        ds = self.dom_store.get_enabled()
         cn = len([d for d in ds if d.group is Group.CN])
         gl = len([d for d in ds if d.group is Group.GLOBAL])
         total = len(ds)
+
+        counts = self.dom_store.count_by_source()
+        parts: list[str] = []
+        if counts.get("builtin"):
+            parts.append(f"内置 <b>{counts['builtin']}</b>")
+        if counts.get("history"):
+            parts.append(f"浏览器 <b>{counts['history']}</b>")
+        if counts.get("manual"):
+            parts.append(f"手动 <b>{counts['manual']}</b>")
+        if counts.get("html") or counts.get("crt_sh"):
+            api_count = counts.get("html", 0) + counts.get("crt_sh", 0)
+            parts.append(f"API发现 <b>{api_count}</b>")
+
+        source_text = " · ".join(parts) if parts else f"共 <b>{total}</b> 个"
+
         self.dom_label.setText(
             f"国内 <b>{cn}</b> 个 · 国外 <b>{gl}</b> 个\n"
-            f"共 <b>{total}</b> 个域名参与测量\n"
-            f"<span style='color:#888;font-size:11px'>在域名管理器中管理启用/禁用</span>"
+            f"{source_text}\n"
+            f"<span style='color:#888;font-size:11px'>管理域名可启用/禁用、添加、扫描浏览器历史</span>"
         )
 
     # -- 交互 -------------------------------------------------------------
@@ -397,13 +414,14 @@ class MainWindow(QMainWindow):
             self._update_estimate()
             self._log_info(f"已载入服务器清单：{path}")
 
-    def load_domains_file(self) -> None:
-        path, _ = QFileDialog.getOpenFileName(self, "选择 domains.toml", "", "TOML (*.toml)")
-        if path:
-            self.config = load_config(None, Path(path))
+    def _open_domain_manager(self) -> None:
+        """打开域名管理器对话框。"""
+        rel_store = RelationStore()
+        dlg = DomainManagerDialog(self.dom_store, rel_store, self)
+        if dlg.exec():
             self._refresh_domain_summary()
             self._update_estimate()
-            self._log_info(f"已载入域名集：{path}")
+            self._log_info("域名配置已更新")
 
     def show_about(self) -> None:
         QMessageBox.information(

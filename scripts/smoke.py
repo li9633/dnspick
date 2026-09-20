@@ -13,17 +13,28 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from dnspick.config import load_config
+from dnspick.domain_store import DomainStore
 from dnspick.runner import Runner
 
 
 async def main() -> None:
     cfg = load_config()
-    # 小样本：只留国内主力 + Cloudflare，域名各取 4 个
+    # 小样本：只留国内主力 + Cloudflare
     keep = {"alidns-1", "dnspod-1", "114-1", "cf-1", "google-1"}
     cfg.set_enabled(keep)
-    cn = [d for d in cfg.domains if d.group.value == "cn"][:4]
-    gl = [d for d in cfg.domains if d.group.value == "global"][:3]
-    cfg.domains = cn + gl
+
+    # 从 DomainStore 选取少量域名做快速冒烟
+    dom_store = DomainStore()
+    dom_store.init()
+    all_doms = dom_store.get_enabled()
+    cn = [d for d in all_doms if d.group.value == "cn"][:4]
+    gl = [d for d in all_doms if d.group.value == "global"][:3]
+    smoke_domains = cn + gl
+
+    # 临时只启用冒烟域名
+    all_names = {d.name for d in all_doms}
+    dom_store.set_enabled_batch(all_names, False)
+    dom_store.set_enabled_batch({d.name for d in smoke_domains}, True)
 
     t = cfg.tunables
     t.resolve_repeat = 2
@@ -31,9 +42,12 @@ async def main() -> None:
     t.icmp_enabled = True
     t.geoip_enabled = True
 
-    runner = Runner(cfg)
+    runner = Runner(cfg, domain_store=dom_store)
     runner.on_progress = lambda p, d, n, m: print(f"  [{p}] {d}/{n} {m}", flush=True)
     result = await asyncio.wait_for(runner.run(), timeout=300)
+
+    # 恢复全部域名启用状态
+    dom_store.set_enabled_batch(all_names, True)
 
     print("\n=== 结果 ===")
     for i, rep in enumerate(result.ranked, 1):
