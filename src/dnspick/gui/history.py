@@ -106,7 +106,10 @@ class HistoryWindow(QDialog):
         self._delete_btn = QPushButton("删除此记录")
         self._delete_btn.clicked.connect(self._delete_entry)
         self._delete_btn.setEnabled(False)
+        self._smartdns_btn = QPushButton("导出 SmartDNS")
+        self._smartdns_btn.clicked.connect(self._export_smartdns)
         bar.addWidget(self._export_btn)
+        bar.addWidget(self._smartdns_btn)
         bar.addWidget(self._delete_btn)
         bar.addWidget(QPushButton("关闭", clicked=self.close))
         root.addLayout(bar)
@@ -791,6 +794,42 @@ class HistoryWindow(QDialog):
         Path(path).write_text(
             json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8",
         )
+
+    def _export_smartdns(self) -> None:
+        if not self._scores:
+            return
+        path, _ = QFileDialog.getSaveFileName(
+            self, "导出 SmartDNS 配置", "smartdns-servers.conf",
+            "配置 (*.conf);;所有文件 (*)",
+        )
+        if not path:
+            return
+
+        _SMARTDNS_PROTO = {"udp": "udp", "tcp": "tcp", "dot": "tls", "doh": "https"}
+        seen: set[str] = set()
+        blocks: list[str] = []
+
+        for s in self._scores:
+            proto = str(s.get("protocol", "udp"))
+            sd_proto = _SMARTDNS_PROTO.get(proto, proto)
+            addr = str(s.get("address", ""))
+            vendor = str(s.get("vendor", "")).lower()
+            name = f"{vendor}_{proto}" if vendor else s.get("server_name", "unknown")
+
+            dedup_key = f"{addr}|{sd_proto}"
+            if dedup_key in seen:
+                continue
+            seen.add(dedup_key)
+
+            blocks.append(
+                f"config server\n"
+                f"        option name '{name}'\n"
+                f"        option type '{sd_proto}'\n"
+                f"        option ip '{addr}'\n"
+                f"        option enabled '1'\n"
+            )
+
+        Path(path).write_text("\n".join(blocks), encoding="utf-8")
 
     def _delete_entry(self) -> None:
         if self._current_mid is None:
