@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import tomllib
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -515,15 +516,6 @@ class DomainManagerDialog(QDialog):
         )
         if not path:
             return
-
-        try:
-            import tomllib
-        except ImportError:
-            try:
-                import tomli as tomllib
-            except ImportError:
-                QMessageBox.critical(self, "导入失败", "缺少 tomli/tomllib 库，无法解析 TOML 文件。")
-                return
 
         try:
             with open(path, "rb") as f:

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -11,27 +12,55 @@ from PySide6.QtWidgets import (
     QDoubleSpinBox,
     QFormLayout,
     QHBoxLayout,
+    QHeaderView,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
     QPushButton,
     QSpinBox,
+    QTableWidget,
+    QTableWidgetItem,
     QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 from dnspick.config import Config
-from dnspick.models import DnsServer
+from dnspick.models import DnsServer, Protocol
+
+_VENDOR_NAMES: dict[str, str] = {
+    "alibaba": "阿里巴巴",
+    "tencent": "腾讯云",
+    "baidu": "百度",
+    "cloudflare": "Cloudflare",
+    "google": "Google",
+    "quad9": "Quad9",
+    "adguard": "AdGuard",
+    "opendns": "OpenDNS",
+    "dnssb": "DNS.SB",
+    "controld": "ControlD",
+    "114dns": "114DNS",
+    "360": "360 DNS",
+    "cnnic": "CNNIC",
+    "huawei": "华为云",
+    "onevps": "ONE DNS",
+    "test": "测试",
+}
+
+_VENDOR_ORDER: dict[str, int] = {
+    "alibaba": 1, "tencent": 2, "baidu": 3, "114dns": 4, "360": 5,
+    "cnnic": 6, "huawei": 7, "onevps": 8,
+    "cloudflare": 10, "google": 11, "quad9": 12, "adguard": 13,
+    "opendns": 14, "dnssb": 15, "controld": 16,
+    "test": 99,
+}
 
 
 class SettingsDialog(QDialog):
     def __init__(self, config: Config, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("设置")
-        self.resize(560, 520)
+        self.resize(680, 520)
         self.config = config
-        self._server_items: list[tuple[QListWidgetItem, DnsServer]] = []
+        self._server_rows: list[DnsServer] = []
 
         tabs = QTabWidget(self)
         tabs.addTab(self._build_servers_tab(), "DNS 服务器")
@@ -54,14 +83,54 @@ class SettingsDialog(QDialog):
         layout = QVBoxLayout(w)
         layout.addWidget(QLabel("勾选参与测量的 DNS（默认只启用各厂商的 UDP 主力节点）"))
 
-        self.server_list = QListWidget()
-        for s in self.config.servers:
-            item = QListWidgetItem(f"{s.name}  —  {s.address}  [{s.protocol.value}]")
-            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-            item.setCheckState(Qt.CheckState.Checked if s.enabled else Qt.CheckState.Unchecked)
-            self.server_list.addItem(item)
-            self._server_items.append((item, s))
-        layout.addWidget(self.server_list)
+        self.server_table = QTableWidget()
+        self.server_table.setColumnCount(5)
+        self.server_table.setHorizontalHeaderLabels(["启用", "厂商", "协议", "地址", "名称"])
+        self.server_table.horizontalHeader().setStretchLastSection(True)
+        self.server_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        self.server_table.setColumnWidth(0, 36)
+        self.server_table.setColumnWidth(1, 80)
+        self.server_table.setColumnWidth(2, 44)
+        self.server_table.setColumnWidth(3, 180)
+        self.server_table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        self.server_table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.server_table.verticalHeader().setVisible(False)
+
+        # 按 vendor 排序，同 vendor 按 protocol 排序
+        servers = sorted(
+            self.config.servers,
+            key=lambda s: (
+                _VENDOR_ORDER.get(s.vendor, 50),
+                {Protocol.UDP: 0, Protocol.TCP: 1, Protocol.DOT: 2, Protocol.DOH: 3}.get(s.protocol, 9),
+            ),
+        )
+        self._server_rows = servers
+
+        last_vendor = None
+        self.server_table.setRowCount(len(servers))
+        for row, s in enumerate(servers):
+            chk = QTableWidgetItem("")
+            chk.setFlags(chk.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            chk.setCheckState(Qt.CheckState.Checked if s.enabled else Qt.CheckState.Unchecked)
+            self.server_table.setItem(row, 0, chk)
+
+            vendor_display = _VENDOR_NAMES.get(s.vendor, s.vendor or "其他")
+            self.server_table.setItem(row, 1, QTableWidgetItem(vendor_display))
+            self.server_table.setItem(row, 2, QTableWidgetItem(s.protocol.value.upper()))
+            self.server_table.setItem(row, 3, QTableWidgetItem(s.address))
+            self.server_table.setItem(row, 4, QTableWidgetItem(s.name))
+
+            # 厂商间加背景色分隔
+            if s.vendor != last_vendor:
+                bg = QColor("#e8f0fe") if s.vendor and s.region == "cn" else QColor("#fef3e4")
+                for col in range(1, 5):
+                    item = self.server_table.item(row, col)
+                    if item:
+                        item.setBackground(bg)
+
+            last_vendor = s.vendor
+
+        layout.addWidget(self.server_table)
 
         row = QHBoxLayout()
         btn_all = QPushButton("全选")
@@ -81,15 +150,16 @@ class SettingsDialog(QDialog):
         return w
 
     def _sel_all(self) -> None:
-        for item, _ in self._server_items:
-            item.setCheckState(Qt.CheckState.Checked)
+        for row in range(self.server_table.rowCount()):
+            self.server_table.item(row, 0).setCheckState(Qt.CheckState.Checked)
 
     def _sel_none(self) -> None:
-        for item, _ in self._server_items:
-            item.setCheckState(Qt.CheckState.Unchecked)
+        for row in range(self.server_table.rowCount()):
+            self.server_table.item(row, 0).setCheckState(Qt.CheckState.Unchecked)
 
     def _sel_invert(self) -> None:
-        for item, _ in self._server_items:
+        for row in range(self.server_table.rowCount()):
+            item = self.server_table.item(row, 0)
             item.setCheckState(
                 Qt.CheckState.Unchecked
                 if item.checkState() is Qt.CheckState.Checked
@@ -97,15 +167,15 @@ class SettingsDialog(QDialog):
             )
 
     def _sel_udp(self) -> None:
-        for item, server in self._server_items:
-            item.setCheckState(
-                Qt.CheckState.Checked if server.protocol.value == "udp" else Qt.CheckState.Unchecked
+        for row, s in enumerate(self._server_rows):
+            self.server_table.item(row, 0).setCheckState(
+                Qt.CheckState.Checked if s.protocol == Protocol.UDP else Qt.CheckState.Unchecked
             )
 
     def _sel_encrypted(self) -> None:
-        for item, server in self._server_items:
-            item.setCheckState(
-                Qt.CheckState.Checked if server.encrypted else Qt.CheckState.Unchecked
+        for row, s in enumerate(self._server_rows):
+            self.server_table.item(row, 0).setCheckState(
+                Qt.CheckState.Checked if s.encrypted else Qt.CheckState.Unchecked
             )
 
     # -- 参数 -------------------------------------------------------------
@@ -230,9 +300,9 @@ class SettingsDialog(QDialog):
     # -- 应用 -------------------------------------------------------------
     def _apply(self) -> None:
         wanted = {
-            server.id
-            for item, server in self._server_items
-            if item.checkState() is Qt.CheckState.Checked
+            self._server_rows[row].id
+            for row in range(self.server_table.rowCount())
+            if self.server_table.item(row, 0).checkState() is Qt.CheckState.Checked
         }
         self.config.set_enabled(wanted)
 
