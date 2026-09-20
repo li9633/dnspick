@@ -35,6 +35,7 @@ class ProbeWorker(QThread):
         loop = asyncio.new_event_loop()
         self._loop = loop
         asyncio.set_event_loop(loop)
+        self._force_stopped = False
         try:
             runner = Runner(self.config)
             self._runner = runner
@@ -43,6 +44,12 @@ class ProbeWorker(QThread):
             self.succeeded.emit(result)
         except asyncio.CancelledError:
             self.failed.emit("已取消")
+        except RuntimeError:
+            # loop.stop() 被调用：强制中断
+            if self._force_stopped:
+                self.failed.emit("已取消")
+            else:
+                raise
         except Exception as exc:  # noqa: BLE001 - 需要把任何异常带回主线程展示
             # 注意：不要给 format_exc 加 limit。之前用 limit=6 只保留最外层 6 帧，
             # 真正出错的深层栈（如 dns/edns.py）被截掉，日志里只剩一串无关帧，难以定位。
@@ -59,7 +66,11 @@ class ProbeWorker(QThread):
         runner = self._runner
         loop = self._loop
         if runner is not None and loop is not None and not loop.is_closed():
+            self._force_stopped = True
             loop.call_soon_threadsafe(runner.request_cancel)
+            # 强制停止事件循环，不等 gather() 逐个清理子任务。
+            # 否则 200+ DNS 查询逐个 transport.close() 会卡 2~5 秒。
+            loop.call_soon_threadsafe(loop.stop)
 
 
 class GeoIpProbeWorker(QThread):

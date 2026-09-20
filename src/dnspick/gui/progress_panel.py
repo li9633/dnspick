@@ -1,7 +1,9 @@
-"""进度面板组件：阶段时间线 + 当前阶段进度条 + ETA 预估。
+"""进度面板组件：阶段徽章行 + 当前阶段进度条 + ETA 预估。
 
 独立 QWidget，通过 @Slot(StageProgress) 接收外部进度更新，
 通过 set_stages() 预设阶段列表，通过 start()/reset() 控制生命周期。
+
+紧凑水平布局：时间线为横排徽章，进度条+ETA 合并行，总高 ~55px。
 """
 
 from __future__ import annotations
@@ -12,9 +14,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
-    QListWidget,
-    QListWidgetItem,
     QProgressBar,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -35,6 +36,17 @@ _DEFAULT_WEIGHTS: dict[str, float] = {
     "评分": 0,
 }
 
+_STAGE_ABBREV: dict[str, str] = {
+    "环境探测": "环境",
+    "域名收集": "域名",
+    "API发现": "API",
+    "DNS 解析": "DNS",
+    "ECS 对比": "ECS",
+    "IP 探测": "IP",
+    "归属地": "归属",
+    "评分": "⏱评分",
+}
+
 
 def _fmt_duration(seconds: float) -> str:
     """格式化耗时。"""
@@ -47,12 +59,12 @@ def _fmt_duration(seconds: float) -> str:
 
 
 class ProgressPanel(QWidget):
-    """进度与阶段时间线面板。
+    """进度与阶段时间线面板（紧凑模式）。
 
     公开接口：
       - set_stages(stages, weights)  预设阶段列表和权重
       - start()                      开始计时
-      - reset()                      恢复到初始状态
+      - reset()                      恢复到初始状态（隐藏）
       - on_progress(StageProgress)   接收进度更新 (@Slot)
       - finish(success)              标记所有阶段完成
     """
@@ -61,10 +73,9 @@ class ProgressPanel(QWidget):
         super().__init__(parent)
         self._stages: list[str] = []
         self._weights: dict[str, float] = {}
-        self._stage_items: dict[str, QListWidgetItem] = {}
+        self._badge_labels: dict[str, QLabel] = {}
         self._stage_started: float = 0.0
         self._stage_durations: dict[str, float] = {}
-        self._stage_results: dict[str, str] = {}
         self._active_stage: str = ""
         self._build_ui()
         self.reset()
@@ -73,97 +84,88 @@ class ProgressPanel(QWidget):
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
-        root.setContentsMargins(0, 0, 0, 0)
-        root.setSpacing(4)
+        root.setContentsMargins(4, 2, 4, 2)
+        root.setSpacing(3)
 
-        # 阶段标题
-        self._stage_header = QLabel("就绪")
-        self._stage_header.setStyleSheet("font-weight: bold; font-size: 13px; color: #3a6ea5;")
-        root.addWidget(self._stage_header)
+        # ── 第一行：进度条 + ETA ──
+        row1 = QHBoxLayout()
+        row1.setSpacing(8)
 
-        # 进度条
+        self._stage_header = QLabel("")
+        self._stage_header.setStyleSheet("font-weight: bold; font-size: 11px; color: #3a6ea5;")
+        row1.addWidget(self._stage_header)
+
         self._progress_bar = QProgressBar()
         self._progress_bar.setTextVisible(True)
         self._progress_bar.setFormat("%p%  %v/%m")
+        self._progress_bar.setFixedHeight(18)
         self._progress_bar.setVisible(False)
-        root.addWidget(self._progress_bar)
+        row1.addWidget(self._progress_bar, 1)
 
-        # 状态描述
-        self._status_label = QLabel("")
-        self._status_label.setStyleSheet("color: #666; font-size: 12px;")
-        root.addWidget(self._status_label)
-
-        # 主体：时间线 + ETA
-        body = QHBoxLayout()
-        body.setSpacing(8)
-
-        # 时间线列表
-        self._timeline = QListWidget()
-        self._timeline.setFixedWidth(210)
-        self._timeline.setStyleSheet("QListWidget { border: 1px solid #ddd; border-radius: 4px; }")
-        self._timeline.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        body.addWidget(self._timeline)
-
-        # ETA 区域
-        eta_col = QVBoxLayout()
-        eta_col.setSpacing(2)
         self._eta_label = QLabel("")
-        self._eta_label.setStyleSheet("color: #888; font-size: 12px;")
-        self._eta_label.setWordWrap(True)
-        self._eta_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-        eta_col.addWidget(self._eta_label)
-        eta_col.addStretch(1)
-        body.addLayout(eta_col)
+        self._eta_label.setStyleSheet("color: #888; font-size: 11px;")
+        self._eta_label.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        row1.addWidget(self._eta_label)
 
-        root.addLayout(body, 1)
+        root.addLayout(row1)
+
+        # ── 第二行：阶段徽章 ──
+        self._badge_row = QHBoxLayout()
+        self._badge_row.setSpacing(3)
+        self._badge_row.addStretch(1)
+        root.addLayout(self._badge_row)
+
+        self.setVisible(False)
 
     # ── 生命周期 ────────────────────────────────────────────────
 
     def start(self) -> None:
-        """重置面板，开始计时。"""
+        """显示面板，开始计时。"""
         self._stage_started = time.time()
         self._stage_durations.clear()
-        self._stage_results.clear()
         self._active_stage = ""
         self._stage_header.setText("准备中…")
         self._progress_bar.setVisible(False)
-        self._status_label.setText("")
         self._eta_label.setText("")
 
         for name in self._stages:
-            item = self._stage_items.get(name)
-            if item is None:
-                item = QListWidgetItem()
-                self._timeline.addItem(item)
-                self._stage_items[name] = item
-            item.setText(name)
-            item.setToolTip("")
-            item.setForeground(Qt.GlobalColor.gray)
-            font = item.font()
-            font.setBold(False)
-            item.setFont(font)
+            lbl = self._badge_labels.get(name)
+            if lbl is None:
+                lbl = self._make_badge()
+                self._badge_row.insertWidget(self._badge_row.count() - 1, lbl)
+                self._badge_labels[name] = lbl
+            lbl.setText(_STAGE_ABBREV.get(name, name[:3]))
+            lbl.setStyleSheet(self._badge_style("pending"))
+            lbl.setToolTip(f"{name}: 等待中")
+
+        self._badge_row.itemAt(self._badge_row.count() - 1).widget()  # keep stretch
+        self.setVisible(True)
+        self.updateGeometry()
 
     def reset(self) -> None:
-        """恢复到初始「等待任务开始」状态。"""
-        self._stage_header.setText("就绪")
-        self._stage_header.setStyleSheet("font-weight: bold; font-size: 13px; color: #3a6ea5;")
+        """恢复到初始状态并隐藏。"""
+        self._stage_header.setText("")
         self._progress_bar.setVisible(False)
-        self._status_label.setText("")
-        self._eta_label.setText("等待任务开始")
-        self._timeline.clear()
-        self._stage_items.clear()
+        self._eta_label.setText("")
+        for lbl in self._badge_labels.values():
+            self._badge_row.removeWidget(lbl)
+            lbl.deleteLater()
+        self._badge_labels.clear()
         self._stage_durations.clear()
-        self._stage_results.clear()
         self._active_stage = ""
+        self.setVisible(False)
 
     def finish(self, success: bool = True) -> None:
         """标记所有阶段完成。"""
         self._stage_header.setText("已完成" if success else "已中断")
         color = "#4a9" if success else "#d44"
-        self._stage_header.setStyleSheet(f"font-weight: bold; font-size: 13px; color: {color};")
+        self._stage_header.setStyleSheet(f"font-weight: bold; font-size: 11px; color: {color};")
         self._progress_bar.setVisible(False)
-        self._status_label.setText("")
-        self._eta_label.setText("所有阶段已完成")
+        if self._stage_started:
+            elapsed = time.time() - self._stage_started
+            self._eta_label.setText(f"总耗时 {_fmt_duration(elapsed)}")
+        else:
+            self._eta_label.setText("")
 
     # ── 阶段配置 ────────────────────────────────────────────────
 
@@ -171,38 +173,29 @@ class ProgressPanel(QWidget):
         """预设阶段列表和权重。weights 用于 ETA 计算。"""
         self._stages = stages
         self._weights = weights or _DEFAULT_WEIGHTS
-        self._stage_items.clear()
-        self._timeline.clear()
 
     # ── 进度更新（Slot） ────────────────────────────────────────
 
     def on_progress(self, sp: StageProgress) -> None:
         """接收 Runner 发来的阶段进度快照。"""
 
-        # ── done 状态：更新已完成阶段 ──
         if sp.status == "done":
             self._stage_durations[sp.stage_name] = sp.elapsed_s
-            self._stage_results[sp.stage_name] = sp.msg
-            self._update_timeline_item(sp.stage_name, "done", sp.elapsed_s, sp.msg)
+            self._update_badge(sp.stage_name, "done", sp.elapsed_s, sp.msg)
             self._update_eta()
             return
 
-        # ── skipped 状态 ──
         if sp.status == "skipped":
-            self._update_timeline_item(sp.stage_name, "skipped", 0, sp.msg)
+            self._update_badge(sp.stage_name, "skipped", 0, sp.msg)
             return
 
-        # ── running 状态 ──
+        # ── running ──
         self._active_stage = sp.stage_name
-        self._update_timeline_item(sp.stage_name, "running", sp.elapsed_s, sp.msg)
+        self._update_badge(sp.stage_name, "running", sp.elapsed_s, sp.msg)
 
-        # 更新标题
         self._stage_header.setText(f"阶段 {sp.stage}/{sp.total_stages}  {sp.stage_name}")
-        self._stage_header.setStyleSheet(
-            "font-weight: bold; font-size: 13px; color: #3a6ea5;"
-        )
+        self._stage_header.setStyleSheet("font-weight: bold; font-size: 11px; color: #3a6ea5;")
 
-        # 更新进度条
         if sp.total > 1:
             self._progress_bar.setVisible(True)
             self._progress_bar.setMaximum(sp.total)
@@ -210,51 +203,69 @@ class ProgressPanel(QWidget):
         else:
             self._progress_bar.setVisible(False)
 
-        # 更新状态文本
-        self._status_label.setText(sp.msg)
-
-        # 更新 ETA
         self._update_eta()
 
-    # ── 内部方法 ────────────────────────────────────────────────
+    # ── 徽章 ────────────────────────────────────────────────────
 
-    def _update_timeline_item(
+    @staticmethod
+    def _make_badge() -> QLabel:
+        lbl = QLabel()
+        lbl.setFixedHeight(20)
+        lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl.setContentsMargins(6, 0, 6, 0)
+        return lbl
+
+    @staticmethod
+    def _badge_style(status: str) -> str:
+        if status == "done":
+            return (
+                "background: #e6f4ea; color: #1b7a2d; border: 1px solid #b6d7b9; "
+                "border-radius: 4px; font-size: 10px; font-weight: normal;"
+            )
+        if status == "running":
+            return (
+                "background: #d4e6f1; color: #1a5276; border: 1px solid #7fb3d3; "
+                "border-radius: 4px; font-size: 10px; font-weight: bold;"
+            )
+        if status == "skipped":
+            return (
+                "background: #eee; color: #999; border: 1px solid #ddd; "
+                "border-radius: 4px; font-size: 10px;"
+            )
+        # pending
+        return (
+            "background: #fafafa; color: #bbb; border: 1px solid #e8e8e8; "
+            "border-radius: 4px; font-size: 10px;"
+        )
+
+    def _update_badge(
         self, name: str, status: str, elapsed: float, msg: str
     ) -> None:
-        """更新时间线中某个阶段的显示。"""
-        item = self._stage_items.get(name)
-        if item is None:
+        lbl = self._badge_labels.get(name)
+        if lbl is None:
             return
 
-        font = item.font()
+        lbl.setStyleSheet(self._badge_style(status))
 
+        abbrev = _STAGE_ABBREV.get(name, name[:3])
         if status == "done":
-            item.setText(f"✓  {name}")
-            item.setToolTip(f"耗时 {_fmt_duration(elapsed)}\n{msg}")
-            item.setForeground(Qt.GlobalColor.darkGreen)
-            font.setBold(False)
+            lbl.setText(f"✓ {abbrev}")
+            lbl.setToolTip(f"{name}: 完成 · 耗时 {_fmt_duration(elapsed)}\n{msg}")
         elif status == "skipped":
-            item.setText(f"–  {name}")
-            item.setToolTip(msg or "已跳过")
-            item.setForeground(Qt.GlobalColor.gray)
-            font.setBold(False)
-        else:  # running
-            item.setText(f"●  {name}")
-            item.setForeground(Qt.GlobalColor.darkCyan)
-            font.setBold(True)
+            lbl.setText(f"— {abbrev}")
+            lbl.setToolTip(f"{name}: {msg or '已跳过'}")
+        else:
+            lbl.setText(f"● {abbrev}")
+            lbl.setToolTip(f"{name}: {msg}")
 
-        item.setFont(font)
+    # ── ETA ─────────────────────────────────────────────────────
 
     def _update_eta(self) -> None:
-        """基于已完成阶段的加权速率估算剩余时间。"""
         completed_durations = self._stage_durations
         if not completed_durations:
-            # 冷启动：无已完成阶段，不做预估
-            if self._active_stage:
-                self._eta_label.setText("估算中…")
+            self._eta_label.setText("")
             return
 
-        # 已完成阶段加权速率
         total_weight_done = 0.0
         total_time_done = 0.0
         for name, dur in completed_durations.items():
@@ -265,17 +276,14 @@ class ProgressPanel(QWidget):
         if total_weight_done == 0:
             return
 
-        rate = total_time_done / total_weight_done  # 秒/权重单位
+        rate = total_time_done / total_weight_done
 
-        # 剩余阶段总权重（权重为 0 的阶段跳过）
         remaining_weight = 0.0
-        remaining_stages: list[str] = []
         for name in self._stages:
             if name not in completed_durations:
                 w = self._weights.get(name, 1)
                 if w > _ZERO_WEIGHT_SENTINEL:
                     remaining_weight += w
-                    remaining_stages.append(name)
 
         if remaining_weight == 0:
             self._eta_label.setText("即将完成")
@@ -283,17 +291,6 @@ class ProgressPanel(QWidget):
 
         remaining_sec = rate * remaining_weight
         elapsed = time.time() - self._stage_started if self._stage_started else 0
-        total_est = elapsed + remaining_sec
-
-        parts = []
-        if total_est > 60:
-            parts.append(f"预计总耗时 ~{_fmt_duration(total_est)}")
-        else:
-            parts.append(f"总耗时 ~{_fmt_duration(total_est)}")
-        parts.append(f"已用 {_fmt_duration(elapsed)}")
-        if remaining_sec > 60:
-            parts.append(f"剩余 ~{_fmt_duration(remaining_sec)}")
-        else:
-            parts.append(f"剩余 ~{_fmt_duration(remaining_sec)}")
-
-        self._eta_label.setText(" · ".join(parts))
+        self._eta_label.setText(
+            f"已用 {_fmt_duration(elapsed)} · 剩余 ~{_fmt_duration(remaining_sec)}"
+        )
