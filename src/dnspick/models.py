@@ -204,3 +204,17 @@ class RunResult:
     @property
     def ranked(self) -> list[ServerReport]:
         return sorted(self.reports, key=lambda r: r.total, reverse=True)
+
+
+@dataclass
+class StageProgress:
+    """单个阶段进度快照，通过 Signal/Slot 从 Worker 传递到 GUI。"""
+
+    stage: int          # 当前阶段序号（1-based）
+    total_stages: int   # 总阶段数
+    stage_name: str     # 阶段名，如 "DNS 解析"
+    done: int           # 当前阶段内已完成数
+    total: int          # 当前阶段内总数
+    msg: str            # 描述文本
+    status: str = "running"     # "running" | "done" | "skipped"
+    elapsed_s: float = 0.0      # 本阶段已耗时（秒）

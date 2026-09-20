@@ -43,7 +43,7 @@ async def main() -> None:
     t.geoip_enabled = True
 
     runner = Runner(cfg, domain_store=dom_store)
-    runner.on_progress = lambda p, d, n, m: print(f"  [{p}] {d}/{n} {m}", flush=True)
+    runner.on_progress = lambda sp: print(f"  [{sp.stage_name}] {sp.done}/{sp.total} {sp.msg}", flush=True)
     result = await asyncio.wait_for(runner.run(), timeout=300)
 
     # 恢复全部域名启用状态

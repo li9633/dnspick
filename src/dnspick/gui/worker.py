@@ -21,7 +21,7 @@ from dnspick.runner import Runner
 class ProbeWorker(QThread):
     """在独立线程里跑 asyncio 测量任务。"""
 
-    progress = Signal(str, int, int, str)  # phase, done, total, msg
+    progress = Signal(object)  # StageProgress
     succeeded = Signal(object)  # RunResult
     failed = Signal(str)
 
@@ -38,7 +38,7 @@ class ProbeWorker(QThread):
         try:
             runner = Runner(self.config)
             self._runner = runner
-            runner.on_progress = lambda p, d, t, m: self.progress.emit(p, d, t, m)
+            runner.on_progress = lambda sp: self.progress.emit(sp)
             result: RunResult = loop.run_until_complete(runner.run())
             self.succeeded.emit(result)
         except asyncio.CancelledError:

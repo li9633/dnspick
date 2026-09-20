@@ -20,13 +20,25 @@ from dnspick.config import Config
 from dnspick.domain_store import DomainStore
 from dnspick.geoip import GeoIpResolver
 from dnspick.ipprobe import IpProber, is_ip
-from dnspick.models import Group, IpProbeResult, ResolveRecord, RunResult, RunSummary
+from dnspick.models import Group, IpProbeResult, ResolveRecord, RunResult, RunSummary, StageProgress
 from dnspick.relation_store import RelationStore
 from dnspick.resolver import DnsResolver, parse_ecs_subnet
 from dnspick.scorer import Scorer, hijack_from_probes
 
-# phase, done, total, message
-ProgressCb = Callable[[str, int, int, str], None]
+_STAGES = [
+    "环境探测",
+    "域名收集",
+    "API发现",
+    "DNS 解析",
+    "ECS 对比",
+    "IP 探测",
+    "归属地",
+    "评分",
+]
+
+_STAGE_INDEX: dict[str, int] = {n: i for i, n in enumerate(_STAGES)}
+
+ProgressCb = Callable[[StageProgress], None]
 
 _PUBLIC_IP_SOURCES = (
     # 国内服务优先 —— VPN 分流场景下国内服务走直连，能拿到真实出口 IP
@@ -87,10 +99,32 @@ class Runner:
         self.on_progress = on_progress
         self._task: asyncio.Task | None = None
         self._cancel_pending = False
+        self._stage_idx: int = -1
+        self._stage_started: float = 0.0
 
-    def emit(self, phase: str, done: int, total: int, msg: str) -> None:
-        if self.on_progress:
-            self.on_progress(phase, done, total, msg)
+    def _emit(self, name: str, done: int, total: int, msg: str, status: str = "running") -> None:
+        if not self.on_progress:
+            return
+        idx = _STAGE_INDEX.get(name, 0)
+        elapsed = time.time() - self._stage_started if self._stage_started else 0.0
+        self.on_progress(StageProgress(
+            stage=idx + 1, total_stages=len(_STAGES),
+            stage_name=name, done=done, total=total,
+            msg=msg, status=status, elapsed_s=elapsed,
+        ))
+
+    def _enter_stage(self, name: str) -> None:
+        if self._stage_idx >= 0:
+            # 发上一阶段的 done
+            prev_name = _STAGES[self._stage_idx]
+            duration = time.time() - self._stage_started if self._stage_started else 0.0
+            self._emit(prev_name, 1, 1, f"完成 · 耗时 {duration:.1f}s", "done")
+        self._stage_idx = _STAGE_INDEX.get(name, 0)
+        self._stage_started = time.time()
+
+    def _skip_stage(self, name: str, reason: str = "") -> None:
+        self._enter_stage(name)
+        self._emit(name, 0, 0, reason or "已跳过", "skipped")
 
     @staticmethod
     def _check_environment(ips: dict[str, IpProbeResult], summary: RunSummary) -> None:
@@ -137,26 +171,30 @@ class Runner:
         summary = RunSummary(started_at=started)
 
         # A1. 环境探测
-        self.emit("环境探测", 0, 1, "获取出口公网 IP")
+        self._enter_stage("环境探测")
+        self._emit("环境探测", 0, 1, "获取出口公网 IP")
         public_ip = await asyncio.to_thread(_detect_public_ip)
         summary.public_ip = public_ip
         ecs_subnet = _to_subnet(public_ip) if (public_ip and self.cfg.use_ecs) else None
         if ecs_subnet and parse_ecs_subnet(ecs_subnet) is None:
             ecs_subnet = None
         summary.ecs_subnet = ecs_subnet
-        self.emit("环境探测", 1, 1, f"出口 IP: {public_ip or '未知'}")
+        self._emit("环境探测", 1, 1, f"出口 IP: {public_ip or '未知'}")
 
-        # A2. 从数据库加载启用的域名
+        # A2. 域名收集：从数据库加载启用的域名
+        self._enter_stage("域名收集")
         self.dom_store.init()
         domains = self.dom_store.get_enabled()
-
         servers = self.cfg.active_servers()
         summary.servers = len(servers)
         summary.domains = len(domains)
+        self._emit("域名收集", len(domains), len(domains),
+                   f"共 {len(domains)} 个域名，{len(servers)} 台服务器")
 
         # A3. API 域名自动发现（可选）
         if t.api_discovery_enabled:
-            self.emit("API发现", 0, 1, "从主站首页 + 证书透明日志发现关联域名")
+            self._enter_stage("API发现")
+            self._emit("API发现", 0, 1, "从主站首页 + 证书透明日志发现关联域名")
             store = RelationStore()
             discovery = ApiDomainDiscovery(
                 store=store,
@@ -171,20 +209,17 @@ class Runner:
             if extra:
                 domains = domains + extra
                 summary.api_discovered = len(extra)
-                self.emit(
-                    "API发现", 1, 1,
-                    f"发现 {len(extra)} 个关联域名，总域名 {len(domains)} 个",
-                )
+                self._emit("API发现", 1, 1,
+                           f"发现 {len(extra)} 个关联域名，总域名 {len(domains)} 个")
             else:
-                self.emit("API发现", 1, 1, "未发现新关联域名")
-
-        # A4. 阶段A 完成
-        self.emit("域名收集", len(domains), len(domains),
-                  f"共 {len(domains)} 个域名，开始 DNS 测量")
+                self._emit("API发现", 1, 1, "未发现新关联域名")
+        else:
+            self._skip_stage("API发现")
 
         # === 阶段B: DNS 测量 ============================================
 
-        # B1. 解析矩阵
+        # B1. DNS 解析
+        self._enter_stage("DNS 解析")
         resolver = DnsResolver(
             servers=servers,
             timeout=t.resolve_timeout,
@@ -193,7 +228,7 @@ class Runner:
             repeat=t.resolve_repeat,
             warmup=t.warmup,
             ecs_subnet=ecs_subnet,
-            on_progress=lambda d, n, m: self.emit("DNS 解析", d, n, m),
+            on_progress=lambda d, n, m: self._emit("DNS 解析", d, n, m),
         )
         records: list[ResolveRecord] = []
         records.extend(await resolver.run(domains))
@@ -201,22 +236,26 @@ class Runner:
         probes = builtin.probe_domains()
         records.extend(await resolver.run_probes(probes))
 
-        # ECS 对比（可选，只对国内 CDN 组做，省时间）
+        # B2. ECS 对比（可选）
         ecs_support: dict[str, bool | None] = {s.id: None for s in servers}
         if ecs_subnet:
+            self._enter_stage("ECS 对比")
             cn_doms = [d for d in domains if d.group is Group.CN][:5]
             ecs_total = len(servers)
             for ecs_done, server in enumerate(servers, 1):
                 pairs = await resolver.ecs_compare(server, cn_doms)
-                self.emit("ECS 对比", ecs_done, ecs_total, server.name)
+                self._emit("ECS 对比", ecs_done, ecs_total, server.name)
                 diffs = [a != b for a, b in pairs.values() if a and b]
                 if diffs:
                     ecs_support[server.id] = sum(diffs) / len(diffs) > 0.3
+        else:
+            self._skip_stage("ECS 对比", "ECS 未启用或无子网")
 
-        # B2. IP 探测
+        # B3. IP 探测
         unique_ips = sorted({ip for r in records if r.ok for ip in r.answers if is_ip(ip)})
         summary.unique_ips = len(unique_ips)
-        self.emit("IP 探测", 0, len(unique_ips), f"去重后 {len(unique_ips)} 个 IP")
+        self._enter_stage("IP 探测")
+        self._emit("IP 探测", 0, len(unique_ips), f"去重后 {len(unique_ips)} 个 IP")
 
         prober = IpProber(
             ports=t.tcp_ports,
@@ -229,34 +268,42 @@ class Runner:
             icmp_count=t.icmp_count,
             icmp_concurrency=t.icmp_concurrency,
             deep_traceroute=t.deep_traceroute,
-            on_progress=lambda d, n, m: self.emit("IP 探测", d, n, m),
+            on_progress=lambda d, n, m: self._emit("IP 探测", d, n, m),
         )
         ip_results = await prober.run(unique_ips)
 
         Runner._check_environment(ip_results, summary)
         if summary.warning:
-            self.emit("环境检测", 1, 1, summary.warning)
+            self._emit("IP 探测", len(unique_ips), len(unique_ips), summary.warning)
 
-        # B3. 归属地
+        # B4. 归属地
+        self._enter_stage("归属地")
         geo = GeoIpResolver(
             enabled=t.geoip_enabled,
             mmdb_path=self.cfg.geoip_db,
             extra_cn_prefixes=self.cfg.extra_cn_prefixes,
         )
         try:
+            self._emit("归属地", 0, 1, "查询 GeoIP 归属地")
             geos = await geo.resolve(unique_ips)
             for ip, g in geos.items():
                 if ip in ip_results:
                     ip_results[ip].geo = g
+            self._emit("归属地", 1, 1, f"完成 · {len(geos)} 个 IP")
         finally:
             geo.close()
 
-        # B4. 评分
-        self.emit("评分", 0, 1, "综合评分中")
+        # B5. 评分
+        self._enter_stage("评分")
+        self._emit("评分", 0, 1, "综合评分中")
         hijacks = hijack_from_probes(records)
         scorer = Scorer(t)
         reports = scorer.build(servers, records, ip_results, hijacks, ecs_support)
-        self.emit("评分", 1, 1, "完成")
+        self._emit("评分", 1, 1, "完成")
+
+        # 末阶段 done
+        duration = time.time() - self._stage_started
+        self._emit("评分", 1, 1, f"完成 · 耗时 {duration:.1f}s", "done")
 
         summary.duration_s = round(time.time() - started, 1)
         return RunResult(

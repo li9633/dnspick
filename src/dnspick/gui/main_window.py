@@ -7,7 +7,6 @@
 from __future__ import annotations
 
 import enum
-import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -23,7 +22,6 @@ from PySide6.QtWidgets import (
     QLabel,
     QMainWindow,
     QMessageBox,
-    QProgressBar,
     QPushButton,
     QScrollArea,
     QSplitter,
@@ -36,6 +34,7 @@ from dnspick.config import load_config
 from dnspick.domain_store import DomainStore
 from dnspick.gui.domain_manager import DomainManagerDialog
 from dnspick.gui.history import HistoryWindow
+from dnspick.gui.progress_panel import ProgressPanel
 from dnspick.gui.settings import SettingsDialog
 from dnspick.gui.worker import ProbeWorker
 from dnspick.models import Group, Protocol, RunResult
@@ -84,7 +83,6 @@ class MainWindow(QMainWindow):
         self.dom_store.init()
         self.store = ResultStore()
         self.worker: ProbeWorker | None = None
-        self._run_started_at: float = 0.0
         self.last_mid: str | None = None
 
         self._build_ui()
@@ -120,8 +118,6 @@ class MainWindow(QMainWindow):
         self.profile_label.setText(_PROFILE_HINTS.get(self.profile.currentText(), ""))
         self.chk_deep = QCheckBox("深度 traceroute")
         self.chk_ecs = QCheckBox("ECS 对比")
-        self.estimate_label = QLabel("")
-        self.estimate_label.setStyleSheet("color: #888; font-size: 12px;")
 
         bar.addWidget(self.btn_start)
         bar.addWidget(self.btn_stop)
@@ -130,7 +126,6 @@ class MainWindow(QMainWindow):
         bar.addWidget(self.profile_label)
         bar.addWidget(self.chk_deep)
         bar.addWidget(self.chk_ecs)
-        bar.addWidget(self.estimate_label)
         bar.addStretch(1)
         self.btn_history = QPushButton("优选历史")
         self.btn_history.clicked.connect(self.show_history)
@@ -140,15 +135,14 @@ class MainWindow(QMainWindow):
         bar.addWidget(self.btn_settings)
         root.addLayout(bar)
 
-        # ── 进度 ──
-        self.progress = QProgressBar()
-        self.progress.setFormat("%p%  %v/%m")
-        self.status_label = QLabel("就绪")
-        self.status_label.setFixedWidth(280)
-        prog_row = QHBoxLayout()
-        prog_row.addWidget(self.progress, 1)
-        prog_row.addWidget(self.status_label)
-        root.addLayout(prog_row)
+        # ── 进度面板 ──
+        self.progress_panel = ProgressPanel()
+        self.progress_panel.set_stages([
+            "环境探测", "域名收集", "API发现",
+            "DNS 解析", "ECS 对比", "IP 探测",
+            "归属地", "评分",
+        ])
+        root.addWidget(self.progress_panel)
 
         # ── 主体：DNS 协议分布 + 域名摘要 ──
         # 左侧：协议分布卡片
@@ -390,8 +384,7 @@ class MainWindow(QMainWindow):
         self.profile_label.setText(_PROFILE_HINTS.get(name, ""))
 
     def _update_estimate(self) -> None:
-        self.estimate_label.setText("等待任务开始")
-        self.estimate_label.setToolTip("")
+        self.progress_panel.reset()
 
     def open_settings(self) -> None:
         dlg = SettingsDialog(self.config, self)
@@ -461,16 +454,13 @@ class MainWindow(QMainWindow):
             QMessageBox.warning(self, "无可用服务器", "请在 DNS 服务器列表中勾选至少一台。")
             return
 
-        self.progress.setValue(0)
-        self._run_started_at = time.time()
-        self.estimate_label.setText("运行中…")
-        self.estimate_label.setToolTip("")
+        self.progress_panel.start()
         self.btn_start.setEnabled(False)
         self.btn_stop.setEnabled(True)
         self.btn_history.setText("优选历史")
 
         self.worker = ProbeWorker(self.config, self)
-        self.worker.progress.connect(self.on_progress)
+        self.worker.progress.connect(self.progress_panel.on_progress)
         self.worker.succeeded.connect(self.on_finished)
         self.worker.failed.connect(self.on_failed)
         self.worker.start()
@@ -480,32 +470,11 @@ class MainWindow(QMainWindow):
         if self.worker:
             self.worker.stop()
             self.btn_stop.setEnabled(False)
-            self.status_label.setText("正在停止…")
-
-    def on_progress(self, phase: str, done: int, total: int, msg: str) -> None:
-        self.progress.setMaximum(max(total, 1))
-        self.progress.setValue(min(done, total))
-        self.status_label.setText(f"{phase} · {msg}")
-
-        elapsed = time.time() - self._run_started_at
-        if done > 0 and total > 0:
-            rate = elapsed / done
-            remaining = rate * (total - done)
-            if remaining > 60:
-                self.estimate_label.setText(
-                    f"已耗时 {elapsed / 60:.0f}min · 剩余 ~{remaining / 60:.0f}min"
-                )
-            else:
-                self.estimate_label.setText(
-                    f"已耗时 {elapsed:.0f}s · 剩余 ~{remaining:.0f}s"
-                )
-        else:
-            self.estimate_label.setText(f"运行中… ({elapsed:.0f}s)")
 
     def on_finished(self, result: RunResult) -> None:
         self.btn_start.setEnabled(True)
         self.btn_stop.setEnabled(False)
-        self.estimate_label.setText("任务已完成")
+        self.progress_panel.finish(success=True)
         self._reset_status()
         self._log_info("测量完成。")
 
@@ -514,6 +483,7 @@ class MainWindow(QMainWindow):
     def on_failed(self, message: str) -> None:
         self.btn_start.setEnabled(True)
         self.btn_stop.setEnabled(False)
+        self.progress_panel.finish(success=False)
         self._reset_status()
         self._log_error(message)
         QMessageBox.critical(self, "测量失败", message[:1200])
@@ -561,10 +531,7 @@ class MainWindow(QMainWindow):
             self.show_history(self.last_mid)
 
     def _reset_status(self) -> None:
-        self.progress.setMaximum(1)
-        self.progress.setValue(0)
-        self.status_label.setText("就绪")
-        self.estimate_label.setText("等待任务开始")
+        self.progress_panel.reset()
 
     def show_history(self, select_id: str | None = None) -> None:
         dlg = HistoryWindow(self.store, select_id=select_id, parent=self)

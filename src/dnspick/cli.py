@@ -14,7 +14,7 @@ from rich.table import Table
 from dnspick import __version__
 from dnspick.config import Tunables, load_config
 from dnspick.discover import build_report, write_toml
-from dnspick.models import ServerReport, Verdict
+from dnspick.models import ServerReport, StageProgress, Verdict
 from dnspick.runner import Runner
 
 app = typer.Typer(add_completion=False, help="DNS -> IP -> 链路 两段式测量器")
@@ -150,14 +150,20 @@ def run(
         console=console,
         transient=True,
     ) as progress:
-        phases: dict[str, object] = {}
+        stage_tasks: dict[str, object] = {}
 
-        def on_progress(phase: str, done: int, total: int, msg: str) -> None:
-            task = phases.get(phase)
+        def on_progress(sp: StageProgress) -> None:
+            task = stage_tasks.get(sp.stage_name)
             if task is None:
-                task = progress.add_task(phase, total=max(total, 1))
-                phases[phase] = task
-            progress.update(task, completed=done, total=max(total, 1), description=f"{phase}: {msg}")
+                task = progress.add_task(sp.stage_name, total=max(sp.total, 1))
+                stage_tasks[sp.stage_name] = task
+            if sp.status == "done":
+                progress.update(task, completed=sp.total, description=f"[green]✓[/] {sp.stage_name}: {sp.msg}")
+            elif sp.status == "skipped":
+                progress.update(task, visible=False)
+            else:
+                progress.update(task, completed=sp.done, total=max(sp.total, 1),
+                                 description=f"{sp.stage_name}: {sp.msg}")
 
         runner.on_progress = on_progress
         import asyncio
