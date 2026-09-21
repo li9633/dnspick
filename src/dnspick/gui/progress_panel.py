@@ -31,7 +31,8 @@ _DEFAULT_WEIGHTS: dict[str, float] = {
     "API发现": 2,
     "DNS 解析": 8,
     "ECS 对比": 3,
-    "IP 探测": 12,
+    "TCP 探测": 5,
+    "ICMP 探测": 7,
     "归属地": 1,
     "评分": 0,
 }
@@ -42,7 +43,8 @@ _STAGE_ABBREV: dict[str, str] = {
     "API发现": "API",
     "DNS 解析": "DNS",
     "ECS 对比": "ECS",
-    "IP 探测": "IP",
+    "TCP 探测": "TCP",
+    "ICMP 探测": "ICMP",
     "归属地": "归属",
     "评分": "⏱评分",
 }
@@ -77,6 +79,9 @@ class ProgressPanel(QWidget):
         self._stage_started: float = 0.0
         self._stage_durations: dict[str, float] = {}
         self._active_stage: str = ""
+        self._current_done: int = 0
+        self._current_total: int = 1
+        self._stage_start_time: float = 0.0
         self._build_ui()
         self.reset()
 
@@ -190,7 +195,11 @@ class ProgressPanel(QWidget):
             return
 
         # ── running ──
+        if sp.stage_name != self._active_stage:
+            self._stage_start_time = time.time() - sp.elapsed_s
         self._active_stage = sp.stage_name
+        self._current_done = sp.done
+        self._current_total = max(sp.total, 1)
         self._update_badge(sp.stage_name, "running", sp.elapsed_s, sp.msg)
 
         self._stage_header.setText(f"阶段 {sp.stage}/{sp.total_stages}  {sp.stage_name}")
@@ -273,6 +282,16 @@ class ProgressPanel(QWidget):
             total_weight_done += w
             total_time_done += dur
 
+        # 将当前进行中阶段的已耗时和完成比例也纳入估算
+        if self._active_stage and self._current_done > 0:
+            w = self._weights.get(self._active_stage, 1)
+            if w > _ZERO_WEIGHT_SENTINEL:
+                progress = self._current_done / self._current_total
+                now = time.time()
+                current_elapsed = now - self._stage_start_time if self._stage_start_time else 0
+                total_weight_done += w * progress
+                total_time_done += current_elapsed
+
         if total_weight_done == 0:
             return
 
@@ -283,7 +302,10 @@ class ProgressPanel(QWidget):
             if name not in completed_durations:
                 w = self._weights.get(name, 1)
                 if w > _ZERO_WEIGHT_SENTINEL:
-                    remaining_weight += w
+                    if name == self._active_stage and self._current_total > 0:
+                        remaining_weight += w * (1 - self._current_done / self._current_total)
+                    else:
+                        remaining_weight += w
 
         if remaining_weight == 0:
             self._eta_label.setText("即将完成")

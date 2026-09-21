@@ -133,8 +133,8 @@ class MainWindow(QMainWindow):
         self.progress_panel = ProgressPanel()
         self.progress_panel.set_stages([
             "环境探测", "域名收集", "API发现",
-            "DNS 解析", "ECS 对比", "IP 探测",
-            "归属地", "评分",
+            "DNS 解析", "ECS 对比", "TCP 探测",
+            "ICMP 探测", "归属地", "评分",
         ])
         root.addWidget(self.progress_panel)
 

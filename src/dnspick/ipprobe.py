@@ -241,7 +241,7 @@ class IpProber:
         icmp_timeout: float = 4.0,
         icmp_concurrency: int = 32,
         deep_traceroute: bool = False,
-        on_progress: Callable | None = None,
+        on_progress: Callable[[str, int, int, str], None] | None = None,
     ) -> None:
         self.ports = ports
         self.tcp_repeat = tcp_repeat
@@ -255,20 +255,16 @@ class IpProber:
         self.icmp_concurrency = icmp_concurrency
         self.deep_traceroute = deep_traceroute
         self.on_progress = on_progress
-        self._done = 0
         self._max_workers = max(8, min(icmp_concurrency * 2, 64))
-
-    def _tick(self, total: int, msg: str) -> None:
-        self._done += 1
-        if self.on_progress:
-            self.on_progress(self._done, total, msg)
 
     async def run(self, ips: list[str]) -> dict[str, IpProbeResult]:
         results: dict[str, IpProbeResult] = {}
         sem = asyncio.Semaphore(self.tcp_concurrency)
-        total = len(ips) * (2 if self.deep_traceroute else 1)
+        tcp_total = len(ips)
+        tcp_done = 0
 
         async def probe(ip: str) -> None:
+            nonlocal tcp_done
             async with sem:
                 res = await tcp_measure(ip, self.ports, self.tcp_repeat, self.tcp_timeout)
             if not res.unreachable:
@@ -277,14 +273,16 @@ class IpProber:
                     ip, res.best_port or self.ports[0], self.hop_max, self.hop_timeout
                 )
             results[ip] = res
-            self._tick(total, f"探测 {ip}")
+            tcp_done += 1
+            if self.on_progress:
+                self.on_progress("TCP 探测", tcp_done, tcp_total, f"探测 {ip}")
 
         await asyncio.gather(*(probe(ip) for ip in ips))
-        await self._run_blocking(ips, results, total)
+        await self._run_blocking(ips, results)
         return results
 
     async def _run_blocking(
-        self, ips: list[str], results: dict[str, IpProbeResult], total: int
+        self, ips: list[str], results: dict[str, IpProbeResult]
     ) -> None:
         """ICMP 与 traceroute 走线程池，避免阻塞事件循环。
 
@@ -296,8 +294,11 @@ class IpProber:
         loop = asyncio.get_running_loop()
         do_icmp = self.icmp_enabled and icmp_available()
         sem = asyncio.Semaphore(self._max_workers)
+        icmp_total = len(ips)
+        icmp_done = 0
 
         async def process_one(ip: str) -> None:
+            nonlocal icmp_done
             async with sem:
 
                 async def _icmp() -> tuple:
@@ -322,6 +323,8 @@ class IpProber:
                 if trace_task:
                     res.route = list(await trace_task)
 
-            self._tick(total, f"链路探测 {ip}")
+            icmp_done += 1
+            if self.on_progress:
+                self.on_progress("ICMP 探测", icmp_done, icmp_total, f"链路探测 {ip}")
 
         await asyncio.gather(*(process_one(ip) for ip in ips))

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
@@ -82,6 +82,14 @@ CREATE INDEX IF NOT EXISTS idx_score_vendor ON server_score(vendor);
 CREATE INDEX IF NOT EXISTS idx_measurement_created ON measurement(created_at DESC);
 """
 
+# 如果库文件是旧版本创建的，补齐可能缺失的列。每行都用了 try/except，
+# 列已存在时 SQLite 报错被静默吞掉，不会影响新库。
+_PATCH_COLUMNS = [
+    "ALTER TABLE measurement ADD COLUMN api_discovered INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE server_score ADD COLUMN vendor TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE server_score ADD COLUMN ecs_supported INTEGER",
+]
+
 
 @dataclass
 class ScoreFilter:
@@ -138,6 +146,10 @@ class ResultStore:
         """创建表结构（幂等）。"""
         with self._conn() as conn:
             conn.executescript(_SCHEMA)
+            # 如果库文件是旧版本创建的，补齐可能缺失的列（幂等，列已存在则跳过）
+            for stmt in _PATCH_COLUMNS:
+                with suppress(sqlite3.OperationalError):
+                    conn.execute(stmt)
 
     # -- 写入 -------------------------------------------------------------
     def save(

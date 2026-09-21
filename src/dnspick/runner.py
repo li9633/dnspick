@@ -40,7 +40,8 @@ _STAGES = [
     "API发现",
     "DNS 解析",
     "ECS 对比",
-    "IP 探测",
+    "TCP 探测",
+    "ICMP 探测",
     "归属地",
     "评分",
 ]
@@ -274,8 +275,17 @@ class Runner:
         # B3. IP 探测
         unique_ips = sorted({ip for r in records if r.ok for ip in r.answers if is_ip(ip)})
         summary.unique_ips = len(unique_ips)
-        self._enter_stage("IP 探测")
-        self._emit("IP 探测", 0, len(unique_ips), f"去重后 {len(unique_ips)} 个 IP")
+        self._enter_stage("TCP 探测")
+        self._emit("TCP 探测", 0, len(unique_ips), f"去重后 {len(unique_ips)} 个 IP")
+
+        last_probe_phase = "TCP 探测"
+
+        def on_probe_progress(phase: str, done: int, total: int, msg: str) -> None:
+            nonlocal last_probe_phase
+            if phase != last_probe_phase:
+                self._enter_stage(phase)
+                last_probe_phase = phase
+            self._emit(phase, done, total, msg)
 
         prober = IpProber(
             ports=t.tcp_ports,
@@ -289,7 +299,7 @@ class Runner:
             icmp_timeout=t.icmp_timeout_s,
             icmp_concurrency=t.icmp_concurrency,
             deep_traceroute=t.deep_traceroute,
-            on_progress=lambda d, n, m: self._emit("IP 探测", d, n, m),
+            on_progress=on_probe_progress,
         )
         ip_results = await prober.run(unique_ips)
 
@@ -298,7 +308,7 @@ class Runner:
 
         Runner._check_environment(ip_results, summary)
         if summary.warning:
-            self._emit("IP 探测", len(unique_ips), len(unique_ips), summary.warning)
+            self._emit("ICMP 探测", len(unique_ips), len(unique_ips), summary.warning)
             log.warn(summary.warning)
 
         # B4. 归属地
