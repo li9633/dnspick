@@ -36,7 +36,6 @@ class ProbeWorker(QThread):
         loop = asyncio.new_event_loop()
         self._loop = loop
         asyncio.set_event_loop(loop)
-        self._force_stopped = False
         try:
             runner = Runner(self.config)
             self._runner = runner
@@ -47,35 +46,34 @@ class ProbeWorker(QThread):
             self.failed.emit("已取消")
             log.info("测量任务已取消")
         except RuntimeError:
-            # loop.stop() 被调用：强制中断
             if self._force_stopped:
                 self.failed.emit("已取消")
                 log.info("测量任务已强制中止")
             else:
                 raise
         except Exception as exc:  # noqa: BLE001 - 需要把任何异常带回主线程展示
-            # 注意：不要给 format_exc 加 limit。之前用 limit=6 只保留最外层 6 帧，
-            # 真正出错的深层栈（如 dns/edns.py）被截掉，日志里只剩一串无关帧，难以定位。
             tb = traceback.format_exc()
             log.error(f"测量异常: {type(exc).__name__}: {exc}")
             self.failed.emit(f"{type(exc).__name__}: {exc}\n{tb}")
         finally:
+            self._runner = None
             with contextlib.suppress(Exception):
                 loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
             self._loop = None
 
     def stop(self) -> None:
-        """主线程调用：请求中断。"""
+        """主线程调用：请求中断。
+
+        通过 call_soon_threadsafe 把取消操作派发到 worker 的事件循环线程，
+        让 CancelledError 沿 gather() 正常传播，子任务自行关闭 transport 避免内存泄漏。
+        """
         self.requestInterruption()
         runner = self._runner
         loop = self._loop
         if runner is not None and loop is not None and not loop.is_closed():
             self._force_stopped = True
             loop.call_soon_threadsafe(runner.request_cancel)
-            # 强制停止事件循环，不等 gather() 逐个清理子任务。
-            # 否则 200+ DNS 查询逐个 transport.close() 会卡 2~5 秒。
-            loop.call_soon_threadsafe(loop.stop)
 
 
 class GeoIpProbeWorker(QThread):

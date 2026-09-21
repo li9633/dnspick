@@ -136,6 +136,13 @@ class Runner:
         self._enter_stage(name)
         self._emit(name, 0, 0, reason or "已跳过", "skipped")
 
+    def _check_cancel(self) -> None:
+        """在阶段之间检查取消标记，及时终止避免浪费计算。"""
+        if self._cancel_pending:
+            if self._task and not self._task.done():
+                self._task.cancel()
+            raise asyncio.CancelledError()
+
     @staticmethod
     def _check_environment(ips: dict[str, IpProbeResult], summary: RunSummary) -> None:
         """识别「测了个寂寞」的环境。
@@ -193,6 +200,7 @@ class Runner:
         log.info(f"出口公网 IP: {public_ip or '未知'}")
 
         # A2. 域名收集：从数据库加载启用的域名
+        self._check_cancel()
         self._enter_stage("域名收集")
         self.dom_store.init()
         domains = self.dom_store.get_enabled()
@@ -226,6 +234,7 @@ class Runner:
         else:
             self._skip_stage("API发现")
 
+        self._check_cancel()
         summary.servers = len(servers)
         summary.domains = len(domains)
 
@@ -248,6 +257,7 @@ class Runner:
 
         probes = builtin.probe_domains()
         records.extend(await resolver.run_probes(probes))
+        self._check_cancel()
         ok_count = sum(1 for r in records if r.ok)
         timeout_count = sum(1 for r in records if r.status == ResolveStatus.TIMEOUT)
         error_count = sum(1 for r in records if r.status == ResolveStatus.ERROR)
@@ -272,6 +282,7 @@ class Runner:
         else:
             self._skip_stage("ECS 对比", "ECS 未启用或无子网")
 
+        self._check_cancel()
         # B3. IP 探测
         unique_ips = sorted({ip for r in records if r.ok for ip in r.answers if is_ip(ip)})
         summary.unique_ips = len(unique_ips)
@@ -302,6 +313,7 @@ class Runner:
             on_progress=on_probe_progress,
         )
         ip_results = await prober.run(unique_ips)
+        self._check_cancel()
 
         unreachable = sum(1 for r in ip_results.values() if r.unreachable)
         log.info(f"IP 探测完成: {len(ip_results)} 个 IP, {unreachable} 个不可达")

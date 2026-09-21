@@ -499,13 +499,15 @@ class MainWindow(QMainWindow):
         log.info("测量完成。")
 
         QTimer.singleShot(50, lambda: self._handle_result(result))
+        QTimer.singleShot(100, lambda: setattr(self, 'worker', None))
 
     def on_failed(self, message: str) -> None:
         self.btn_start.setEnabled(True)
         self.btn_stop.setEnabled(False)
         self.progress_panel.finish(success=False)
         self._reset_status()
-        log.error(message)
+        self.worker = None
+        log.warn(message)
         QMessageBox.critical(self, "测量失败", message[:1200])
 
     def _handle_result(self, result: RunResult) -> None:
