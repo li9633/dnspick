@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from dnspick.config import Config
+from dnspick.gui.runner_config import RunnerConfig
 from dnspick.models import DnsServer, Protocol
 
 _VENDOR_NAMES: dict[str, str] = {
@@ -55,11 +55,11 @@ _VENDOR_ORDER: dict[str, int] = {
 
 
 class SettingsDialog(QDialog):
-    def __init__(self, config: Config, parent=None) -> None:
+    def __init__(self, runner: RunnerConfig, parent=None) -> None:
         super().__init__(parent)
         self.setWindowTitle("设置")
         self.resize(680, 520)
-        self.config = config
+        self.runner = runner
         self._server_rows: list[DnsServer] = []
 
         tabs = QTabWidget(self)
@@ -98,7 +98,7 @@ class SettingsDialog(QDialog):
 
         # 按 vendor 排序，同 vendor 按 protocol 排序
         servers = sorted(
-            self.config.servers,
+            self.runner.config.servers,
             key=lambda s: (
                 _VENDOR_ORDER.get(s.vendor, 50),
                 {Protocol.UDP: 0, Protocol.TCP: 1, Protocol.DOT: 2, Protocol.DOH: 3}.get(s.protocol, 9),
@@ -180,7 +180,7 @@ class SettingsDialog(QDialog):
 
     # -- 参数 -------------------------------------------------------------
     def _build_tuning_tab(self) -> QWidget:
-        t = self.config.tunables
+        t = self.runner.config.tunables
         form = QFormLayout()
 
         self.repeat = QSpinBox()
@@ -211,7 +211,9 @@ class SettingsDialog(QDialog):
         form.addRow("DNS 全局并发", self.dns_conc)
 
         self.deep = QCheckBox("深度模式：对每个 IP 跑完整 traceroute（很慢）")
-        self.deep.setChecked(t.deep_traceroute)
+        self.deep.setChecked(self.runner.deep_traceroute)
+        self.deep.toggled.connect(self._on_settings_deep_toggled)
+        self.runner.deep_traceroute_changed.connect(self._sync_settings_deep)
         form.addRow(self.deep)
 
         self.icmp = QCheckBox("启用 ICMP ping 辅助")
@@ -223,7 +225,9 @@ class SettingsDialog(QDialog):
         form.addRow(self.geoip)
 
         self.ecs = QCheckBox("启用 ECS 对比查询（需探测公网 IP）")
-        self.ecs.setChecked(self.config.use_ecs)
+        self.ecs.setChecked(self.runner.use_ecs)
+        self.ecs.toggled.connect(self._on_settings_ecs_toggled)
+        self.runner.use_ecs_changed.connect(self._sync_settings_ecs)
         form.addRow(self.ecs)
 
         self.api_discovery = QCheckBox("API 域名自动发现：从主站首页 + 证书日志寻找关联域名（耗时较长）")
@@ -236,7 +240,7 @@ class SettingsDialog(QDialog):
 
     # -- 权重 -------------------------------------------------------------
     def _build_weight_tab(self) -> QWidget:
-        t = self.config.tunables
+        t = self.runner.config.tunables
         self.w_speed = self._slider("延迟", t.w_speed)
         self.w_path = self._slider("跳数/路径", t.w_path)
         self.w_stability = self._slider("稳定性", t.w_stability)
@@ -308,9 +312,11 @@ class SettingsDialog(QDialog):
             for row in range(self.server_table.rowCount())
             if self.server_table.item(row, 0).checkState() is Qt.CheckState.Checked
         }
-        self.config.set_enabled(wanted)
+        self.runner.config.set_enabled(wanted)
+        self.runner.servers_changed.emit()
 
-        t = self.config.tunables
+        cfg = self.runner.config
+        t = cfg.tunables
         t.resolve_repeat = self.repeat.value()
         t.resolve_timeout = self.timeout.value()
         t.tcp_timeout = self.tcp_timeout.value()
@@ -330,5 +336,26 @@ class SettingsDialog(QDialog):
             if self.profile.currentText() != "balanced":
                 t.w_speed = float(self.w_speed.value())
         t.api_discovery_enabled = self.api_discovery.isChecked()
-        self.config.use_ecs = self.ecs.isChecked()
+
+        # 写回 RunnerConfig（ECS / deep 通过 toggle 已实时同步）—— 兜底通知
+        self.runner.use_ecs_changed.emit(self.ecs.isChecked())
+        self.runner.deep_traceroute_changed.emit(self.deep.isChecked())
+        if self.profile.currentText():
+            self.runner.profile_changed.emit(self.profile.currentText())
+
         self.accept()
+
+    # -- RunnerConfig 同步槽 ──────────────────────────────────────────
+    def _on_settings_ecs_toggled(self, checked: bool) -> None:
+        self.runner.use_ecs = checked
+
+    def _on_settings_deep_toggled(self, checked: bool) -> None:
+        self.runner.deep_traceroute = checked
+
+    def _sync_settings_ecs(self, v: bool) -> None:
+        if self.ecs.isChecked() != v:
+            self.ecs.setChecked(v)
+
+    def _sync_settings_deep(self, v: bool) -> None:
+        if self.deep.isChecked() != v:
+            self.deep.setChecked(v)

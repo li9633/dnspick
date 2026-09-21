@@ -34,6 +34,7 @@ from dnspick.domain_store import DomainStore
 from dnspick.gui.domain_manager import DomainManagerDialog
 from dnspick.gui.history import HistoryWindow
 from dnspick.gui.progress_panel import ProgressPanel
+from dnspick.gui.runner_config import RunnerConfig
 from dnspick.gui.settings import SettingsDialog
 from dnspick.gui.worker import ProbeWorker
 from dnspick.log import log
@@ -73,6 +74,7 @@ class MainWindow(QMainWindow):
         self.resize(1000, 720)
         self.config = load_config()
         self.config.load_saved()
+        self.runner = RunnerConfig(self.config, self)
         self.dom_store = DomainStore()
         self.dom_store.init()
         self.store = ResultStore()
@@ -99,11 +101,16 @@ class MainWindow(QMainWindow):
         self.btn_stop.setEnabled(False)
         self.btn_stop.clicked.connect(self.stop_run)
         self.profile = QComboBox()
+        self.profile.blockSignals(True)
         for name in _PROFILE_HINTS:
             self.profile.addItem(name)
             self.profile.setItemData(
                 self.profile.count() - 1, _PROFILE_HINTS[name], Qt.ItemDataRole.ToolTipRole
             )
+        saved_profile = self.runner.profile
+        if saved_profile:
+            self.profile.setCurrentText(saved_profile)
+        self.profile.blockSignals(False)
         self.profile.currentTextChanged.connect(self._on_profile)
 
         self.profile_label = QLabel("")
@@ -112,6 +119,17 @@ class MainWindow(QMainWindow):
         self.profile_label.setText(_PROFILE_HINTS.get(self.profile.currentText(), ""))
         self.chk_deep = QCheckBox("深度 traceroute")
         self.chk_ecs = QCheckBox("ECS 对比")
+
+        # ── 绑定到 RunnerConfig（双向同步）──
+        self.chk_deep.setChecked(self.runner.deep_traceroute)
+        self.chk_deep.toggled.connect(self._on_deep_toggled)
+        self.runner.deep_traceroute_changed.connect(self._sync_chk_deep)
+
+        self.chk_ecs.setChecked(self.runner.use_ecs)
+        self.chk_ecs.toggled.connect(self._on_ecs_toggled)
+        self.runner.use_ecs_changed.connect(self._sync_chk_ecs)
+
+        self.runner.profile_changed.connect(self._sync_profile_from_runner)
 
         bar.addWidget(self.btn_start)
         bar.addWidget(self.btn_stop)
@@ -369,10 +387,31 @@ class MainWindow(QMainWindow):
         )
 
     # -- 交互 -------------------------------------------------------------
+    def _on_ecs_toggled(self, checked: bool) -> None:
+        self.runner.use_ecs = checked
+
+    def _on_deep_toggled(self, checked: bool) -> None:
+        self.runner.deep_traceroute = checked
+
+    def _sync_chk_ecs(self, v: bool) -> None:
+        if self.chk_ecs.isChecked() != v:
+            self.chk_ecs.setChecked(v)
+
+    def _sync_chk_deep(self, v: bool) -> None:
+        if self.chk_deep.isChecked() != v:
+            self.chk_deep.setChecked(v)
+
     def _on_profile(self, name: str) -> None:
         if name:
-            self.config.tunables.with_profile(name)
-            self.config.save()
+            self.runner.profile = name
+            self.runner.save()
+
+    def _sync_profile_from_runner(self, v: str) -> None:
+        if self.profile.currentText() != v:
+            self.profile.blockSignals(True)
+            self.profile.setCurrentText(v)
+            self.profile.blockSignals(False)
+        self.profile_label.setText(_PROFILE_HINTS.get(v, ""))
 
     def _on_profile_changed(self, name: str) -> None:
         self.profile_label.setText(_PROFILE_HINTS.get(name, ""))
@@ -381,13 +420,9 @@ class MainWindow(QMainWindow):
         self.progress_panel.reset()
 
     def open_settings(self) -> None:
-        dlg = SettingsDialog(self.config, self)
+        dlg = SettingsDialog(self.runner, self)
         if dlg.exec():
-            self.config.save()
-            self.profile.blockSignals(True)
-            self.profile.setCurrentText(self.config.tunables.profile)
-            self.profile.blockSignals(False)
-            self.profile_label.setText(_PROFILE_HINTS.get(self.config.tunables.profile, ""))
+            self.runner.save()
             self._refresh_protocol_cards()
             self._refresh_domain_summary()
             self._reset_progress()
@@ -395,7 +430,7 @@ class MainWindow(QMainWindow):
     def load_servers_file(self) -> None:
         path, _ = QFileDialog.getOpenFileName(self, "选择 servers.toml", "", "TOML (*.toml)")
         if path:
-            self.config = load_config(Path(path))
+            self.runner.replace_config(load_config(Path(path)))
             self._refresh_protocol_cards()
             self._refresh_domain_summary()
             self._reset_progress()
@@ -434,9 +469,6 @@ class MainWindow(QMainWindow):
     def start_run(self) -> None:
         if self.worker and self.worker.isRunning():
             return
-        self.config.tunables.deep_traceroute = self.chk_deep.isChecked()
-        self.config.use_ecs = self.chk_ecs.isChecked()
-        self.config.tunables.with_profile(self.profile.currentText())
 
         if not self.config.active_servers():
             QMessageBox.warning(self, "无可用服务器", "请在 DNS 服务器列表中勾选至少一台。")
