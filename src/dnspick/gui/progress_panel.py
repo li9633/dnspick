@@ -1,9 +1,13 @@
-"""进度面板组件：阶段徽章行 + 当前阶段进度条 + ETA 预估。
+"""进度面板组件：阶段徽章行 + 进度条 + ETA 预估。
 
 独立 QWidget，通过 @Slot(StageProgress) 接收外部进度更新，
 通过 set_stages() 预设阶段列表，通过 start()/reset() 控制生命周期。
 
 紧凑水平布局：时间线为横排徽章，进度条+ETA 合并行，总高 ~55px。
+
+进度条分两种模式：
+  - 确定进度（total > 1）：标准进度条 + 百分比 + ETA 预估
+  - 不确定进度（total <= 1）：循环动画进度条，不显示 ETA
 """
 
 from __future__ import annotations
@@ -130,7 +134,9 @@ class ProgressPanel(QWidget):
         self._stage_durations.clear()
         self._active_stage = ""
         self._stage_header.setText("准备中…")
-        self._progress_bar.setVisible(False)
+        self._progress_bar.setRange(0, 0)          # 准备阶段：不确定进度
+        self._progress_bar.setFormat("")
+        self._progress_bar.setVisible(True)
         self._eta_label.setText("")
 
         for name in self._stages:
@@ -184,9 +190,14 @@ class ProgressPanel(QWidget):
     def on_progress(self, sp: StageProgress) -> None:
         """接收 Runner 发来的阶段进度快照。"""
 
+        determinate = sp.total > 1
+
         if sp.status == "done":
             self._stage_durations[sp.stage_name] = sp.elapsed_s
             self._update_badge(sp.stage_name, "done", sp.elapsed_s, sp.msg)
+            if self._active_stage == sp.stage_name:
+                self._active_stage = ""
+            self._update_progress_bar(determinate, sp.done, sp.total)
             self._update_eta()
             return
 
@@ -205,14 +216,20 @@ class ProgressPanel(QWidget):
         self._stage_header.setText(f"阶段 {sp.stage}/{sp.total_stages}  {sp.stage_name}")
         self._stage_header.setStyleSheet("font-weight: bold; font-size: 11px; color: #3a6ea5;")
 
-        if sp.total > 1:
-            self._progress_bar.setVisible(True)
-            self._progress_bar.setMaximum(sp.total)
-            self._progress_bar.setValue(sp.done)
-        else:
-            self._progress_bar.setVisible(False)
-
+        self._update_progress_bar(determinate, sp.done, sp.total)
         self._update_eta()
+
+    def _update_progress_bar(self, determinate: bool, done: int, total: int) -> None:
+        """根据是否确定进度，切换进度条显示模式。"""
+        if determinate:
+            self._progress_bar.setRange(0, total)
+            self._progress_bar.setValue(done)
+            self._progress_bar.setFormat("%p%  %v/%m")
+            self._progress_bar.setVisible(True)
+        else:
+            self._progress_bar.setRange(0, 0)       # 不确定进度：循环动画
+            self._progress_bar.setFormat("")         # 不显示文本
+            self._progress_bar.setVisible(True)
 
     # ── 徽章 ────────────────────────────────────────────────────
 
@@ -270,6 +287,11 @@ class ProgressPanel(QWidget):
     # ── ETA ─────────────────────────────────────────────────────
 
     def _update_eta(self) -> None:
+        determinate = self._current_total > 1
+        if not determinate:
+            self._eta_label.setText("")
+            return
+
         completed_durations = self._stage_durations
         if not completed_durations:
             self._eta_label.setText("")

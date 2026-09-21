@@ -108,9 +108,11 @@ class Runner:
         self.dom_store = domain_store or DomainStore()
         self.on_progress = on_progress
         self._task: asyncio.Task | None = None
+        self._discovery: ApiDomainDiscovery | None = None
         self._cancel_pending = False
         self._stage_idx: int = -1
         self._stage_started: float = 0.0
+        self._stage_skipped: set[str] = set()
 
     def _emit(self, name: str, done: int, total: int, msg: str, status: str = "running") -> None:
         if not self.on_progress:
@@ -125,16 +127,17 @@ class Runner:
 
     def _enter_stage(self, name: str) -> None:
         if self._stage_idx >= 0:
-            # 发上一阶段的 done
             prev_name = _STAGES[self._stage_idx]
-            duration = time.time() - self._stage_started if self._stage_started else 0.0
-            self._emit(prev_name, 1, 1, f"完成 · 耗时 {duration:.1f}s", "done")
+            if prev_name not in self._stage_skipped:
+                duration = time.time() - self._stage_started if self._stage_started else 0.0
+                self._emit(prev_name, 1, 1, f"完成 · 耗时 {duration:.1f}s", "done")
         self._stage_idx = _STAGE_INDEX.get(name, 0)
         self._stage_started = time.time()
 
     def _skip_stage(self, name: str, reason: str = "") -> None:
         self._enter_stage(name)
         self._emit(name, 0, 0, reason or "已跳过", "skipped")
+        self._stage_skipped.add(name)
 
     def _check_cancel(self) -> None:
         """在阶段之间检查取消标记，及时终止避免浪费计算。"""
@@ -174,6 +177,8 @@ class Runner:
         self._cancel_pending = True
         if self._task and not self._task.done():
             self._task.cancel()
+        if self._discovery is not None:
+            self._discovery.cancel()
 
     async def run(self) -> RunResult:
         self._task = asyncio.current_task()
@@ -212,7 +217,9 @@ class Runner:
         # A3. API 域名自动发现（可选）
         if t.api_discovery_enabled:
             self._enter_stage("API发现")
-            self._emit("API发现", 0, 1, "从主站首页 + 证书透明日志发现关联域名")
+            step_total = len(domains) * 2  # HTML + CRT 每域名 2 子步
+            self._emit("API发现", 0, step_total,
+                       f"发现 {len(domains)} 个主域名的关联域名")
             store = RelationStore()
             discovery = ApiDomainDiscovery(
                 store=store,
@@ -222,15 +229,25 @@ class Runner:
                 max_per_source=t.api_discovery_max_per_source,
                 min_cache=t.api_discovery_min_cache,
             )
-            results = await discovery.discover_all(domains)
+            self._discovery = discovery
+            try:
+                results = await discovery.discover_all(
+                    domains,
+                    on_progress=lambda done, total, name: self._emit(
+                        "API发现", done, total, name,
+                    ),
+                )
+            finally:
+                self._discovery = None
             extra = ApiDomainDiscovery.to_domain_specs(results, domains)
             if extra:
                 domains = domains + extra
                 summary.api_discovered = len(extra)
-                self._emit("API发现", 1, 1,
+                self._emit("API发现", step_total, step_total,
                            f"发现 {len(extra)} 个关联域名，总域名 {len(domains)} 个")
             else:
-                self._emit("API发现", 1, 1, "未发现新关联域名")
+                self._emit("API发现", step_total, step_total,
+                           "未发现新关联域名")
         else:
             self._skip_stage("API发现")
 
@@ -314,6 +331,9 @@ class Runner:
         )
         ip_results = await prober.run(unique_ips)
         self._check_cancel()
+
+        if not t.icmp_enabled and not t.deep_traceroute:
+            self._skip_stage("ICMP 探测", "ICMP 与 traceroute 均未启用")
 
         unreachable = sum(1 for r in ip_results.values() if r.unreachable)
         log.info(f"IP 探测完成: {len(ip_results)} 个 IP, {unreachable} 个不可达")

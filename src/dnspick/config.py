@@ -102,6 +102,7 @@ class Config:
     extra_cn_prefixes: list[str] = field(default_factory=list)
     geoip_db: str | None = None  # mmdb 路径（可选）
     use_ecs: bool = False  # 是否启用 ECS 对比查询（需先探测公网 IP）
+    log_level: str = "debug"  # 日志等级：debug / info / warn / error
 
     def set_enabled(self, ids: set[str]) -> None:
         """只启用给定 id 的服务器（frozen 实例需整体替换）。"""
@@ -150,6 +151,7 @@ class Config:
                 "api_discovery_min_cache": t.api_discovery_min_cache,
             },
             "use_ecs": self.use_ecs,
+            "log_level": self.log_level,
             "enabled_servers": [s.id for s in self.servers if s.enabled],
         }
         _USER_CONFIG_FILE.write_text(
@@ -192,6 +194,9 @@ class Config:
 
         if "use_ecs" in data:
             self.use_ecs = data["use_ecs"]
+
+        if "log_level" in data:
+            self.log_level = data["log_level"]
 
         if "enabled_servers" in data:
             enabled_ids = set(data["enabled_servers"])

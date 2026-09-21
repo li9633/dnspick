@@ -277,7 +277,14 @@ class IpProber:
             if self.on_progress:
                 self.on_progress("TCP 探测", tcp_done, tcp_total, f"探测 {ip}")
 
-        await asyncio.gather(*(probe(ip) for ip in ips))
+        tasks = [asyncio.create_task(probe(ip)) for ip in ips]
+        try:
+            for coro in asyncio.as_completed(tasks):
+                await coro
+        except asyncio.CancelledError:
+            for t in tasks:
+                t.cancel()
+            raise
         await self._run_blocking(ips, results)
         return results
 
@@ -327,4 +334,11 @@ class IpProber:
             if self.on_progress:
                 self.on_progress("ICMP 探测", icmp_done, icmp_total, f"链路探测 {ip}")
 
-        await asyncio.gather(*(process_one(ip) for ip in ips))
+        tasks = [asyncio.create_task(process_one(ip)) for ip in ips]
+        try:
+            for coro in asyncio.as_completed(tasks):
+                await coro
+        except asyncio.CancelledError:
+            for t in tasks:
+                t.cancel()
+            raise

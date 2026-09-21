@@ -31,6 +31,8 @@ class ProbeWorker(QThread):
         self.config = config
         self._runner: Runner | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
+        self._force_stopped: bool = False
+        self._safety_handle: asyncio.TimerHandle | None = None
 
     def run(self) -> None:
         loop = asyncio.new_event_loop()
@@ -57,16 +59,21 @@ class ProbeWorker(QThread):
             self.failed.emit(f"{type(exc).__name__}: {exc}\n{tb}")
         finally:
             self._runner = None
-            with contextlib.suppress(Exception):
-                loop.run_until_complete(loop.shutdown_asyncgens())
+            if self._safety_handle:
+                with contextlib.suppress(Exception):
+                    self._safety_handle.cancel()
+                self._safety_handle = None
+            if not self._force_stopped:
+                with contextlib.suppress(Exception):
+                    loop.run_until_complete(loop.shutdown_asyncgens())
             loop.close()
             self._loop = None
 
     def stop(self) -> None:
         """主线程调用：请求中断。
 
-        通过 call_soon_threadsafe 把取消操作派发到 worker 的事件循环线程，
-        让 CancelledError 沿 gather() 正常传播，子任务自行关闭 transport 避免内存泄漏。
+        1. 取消 Runner 的 asyncio Task，触发 CancelledError 正常传播
+        2. 注册 3 秒安全网：若 as_completed() 的子任务清理仍过慢则 force-stop
         """
         self.requestInterruption()
         runner = self._runner
@@ -74,6 +81,17 @@ class ProbeWorker(QThread):
         if runner is not None and loop is not None and not loop.is_closed():
             self._force_stopped = True
             loop.call_soon_threadsafe(runner.request_cancel)
+            loop.call_soon_threadsafe(self._schedule_force_stop)
+
+    def _schedule_force_stop(self) -> None:
+        """在 worker 线程内注册 force-stop 超时回调。"""
+        loop = asyncio.get_running_loop()
+        self._safety_handle = loop.call_later(3.0, self._force_stop_if_stuck)
+
+    def _force_stop_if_stuck(self) -> None:
+        """3 秒后仍未结束则强制停止事件循环。"""
+        if self._force_stopped and self._loop and not self._loop.is_closed():
+            self._loop.stop()
 
 
 class GeoIpProbeWorker(QThread):

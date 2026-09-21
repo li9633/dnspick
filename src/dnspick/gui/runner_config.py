@@ -20,6 +20,7 @@ class RunnerConfig(QObject):
 
     use_ecs_changed = Signal(bool)
     deep_traceroute_changed = Signal(bool)
+    log_level_changed = Signal(str)
     profile_changed = Signal(str)
     servers_changed = Signal()
 
@@ -50,6 +51,18 @@ class RunnerConfig(QObject):
         if self._config.tunables.deep_traceroute != v:
             self._config.tunables.deep_traceroute = v
             self.deep_traceroute_changed.emit(v)
+
+    # ── log_level ────────────────────────────────────────────────────
+
+    @property
+    def log_level(self) -> str:
+        return self._config.log_level
+
+    @log_level.setter
+    def log_level(self, v: str) -> None:
+        if self._config.log_level != v:
+            self._config.log_level = v
+            self.log_level_changed.emit(v)
 
     # ── profile ──────────────────────────────────────────────────────
 
@@ -83,5 +96,7 @@ class RunnerConfig(QObject):
             self.deep_traceroute_changed.emit(config.tunables.deep_traceroute)
         if old.tunables.profile != config.tunables.profile:
             self.profile_changed.emit(config.tunables.profile)
+        if old.log_level != config.log_level:
+            self.log_level_changed.emit(config.log_level)
         # 服务器列表接口不同，interface 一定是变了
         self.servers_changed.emit()

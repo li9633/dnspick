@@ -2,8 +2,11 @@
 
 对「每台 DNS × 每个域名 × 重复 N 次」做查询，产出解析记录。
 
-并发模型：asyncio。全局 semaphore 限流，同时限制单台 server 内的并发——
-否则几十个请求互相排队，测出来的是排队时间而不是网络延迟。
+并发模型：有界工作池 + 任务队列。
+  - 只创建 N 个 worker task（N = global_concurrency），内存固定
+  - 生产者把 job tuple 喂入 asyncio.Queue
+  - 消费者从队列拉任务执行，用 Semaphore 控制并发
+  - 取消时：即刻清空队列 + cancel N 个 worker → O(1) 完成
 """
 
 from __future__ import annotations
@@ -13,7 +16,7 @@ import ipaddress
 import ssl
 import struct
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
 
 import dns.asyncquery
 import dns.edns
@@ -108,8 +111,22 @@ def _extract(resp: dns.message.Message, rdtype: str) -> tuple[list[str], int | N
     return ips, ttl
 
 
+def _drain_queue(queue: asyncio.Queue) -> None:
+    """清空任务队列，释放 job tuple 占用的内存。"""
+    while not queue.empty():
+        try:
+            queue.get_nowait()
+            queue.task_done()
+        except asyncio.QueueEmpty:
+            break
+
+
 class DnsResolver:
-    """解析矩阵的执行器。"""
+    """解析矩阵的执行器。
+
+    内部使用有界工作池：只创建 N = global_concurrency 个 worker task，
+    通过 asyncio.Queue 分发任务。取消时只需 cancel N 个 worker + 清空队列。
+    """
 
     def __init__(
         self,
@@ -144,7 +161,6 @@ class DnsResolver:
         try:
             q = _make_query(domain.name, rdtype, subnet)
         except (ValueError, dns.exception.DNSException) as exc:
-            # 构造失败（域名不合法、ECS 参数异常等）只记一条 ERROR，不能中断整轮测量
             return ResolveRecord(
                 server.id,
                 domain.name,
@@ -186,7 +202,6 @@ class DnsResolver:
                 error=type(exc).__name__,
             )
         except Exception as exc:
-            # 兜底：httpx.RemoteProtocolError 等传输层异常不应中断整轮测量
             return ResolveRecord(
                 server.id,
                 domain.name,
@@ -202,6 +217,70 @@ class DnsResolver:
         if self.on_progress:
             self.on_progress(self._done, total, msg)
 
+    # -- 通用工作池 -------------------------------------------------------
+    async def _run_pool(
+        self,
+        job_iter: Iterator[tuple[DnsServer, DomainSpec, str, bool]],
+        total: int,
+        label_fn: Callable[[DnsServer, DomainSpec], str] | None = None,
+    ) -> list[ResolveRecord]:
+        """有界工作池：N 个 worker 从队列取任务，取消时即停。
+
+        核心设计：
+          - 只创建 global_concurrency 个 worker task（而非每个 job 一个 task）
+          - 生产者把 job 喂入有界 Queue（默认容量 = concurrency × 4）
+          - 取消时：cancel N 个 worker + 清空队列，不遍历任务列表
+        """
+        records: list[ResolveRecord] = []
+        queue: asyncio.Queue[tuple[DnsServer, DomainSpec, str, bool]] = asyncio.Queue(
+            maxsize=self.global_concurrency * 4,
+        )
+
+        async def worker() -> None:
+            while True:
+                try:
+                    server, dom, rdtype, ecs = await queue.get()
+                except asyncio.CancelledError:
+                    break
+
+                try:
+                    server_sem = self._server_sems.get(server.id)
+                    async with self._global_sem, (server_sem or _NULL_SEM):
+                        rec = await self.query_once(server, dom, rdtype, ecs=ecs)
+                    records.append(rec)
+                    msg = label_fn(server, dom) if label_fn else f"{server.name} → {dom.name}"
+                    self._tick(total, msg)
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    pass
+                finally:
+                    queue.task_done()
+
+        workers = [asyncio.create_task(worker()) for _ in range(self.global_concurrency)]
+
+        async def producer() -> None:
+            for job in job_iter:
+                await queue.put(job)
+
+        producer_task = asyncio.create_task(producer())
+
+        try:
+            await producer_task
+            await queue.join()
+        except asyncio.CancelledError:
+            producer_task.cancel()
+            for w in workers:
+                w.cancel()
+            _drain_queue(queue)
+            raise
+        finally:
+            for w in workers:
+                if not w.done():
+                    w.cancel()
+
+        return records
+
     # -- 预热 -------------------------------------------------------------
     async def warmup_server(self, server: DnsServer, domain: DomainSpec) -> None:
         """先查一次丢弃：消除冷启动 / ARP / TLS 握手带来的首包污染。"""
@@ -209,21 +288,10 @@ class DnsResolver:
 
     # -- 主流程 -----------------------------------------------------------
     async def run(self, domains: list[DomainSpec]) -> list[ResolveRecord]:
-        records: list[ResolveRecord] = []
-        jobs: list[tuple[DnsServer, DomainSpec, int, bool]] = []
-        for server in self.servers:
-            for i in range(self.repeat):
-                for dom in domains:
-                    jobs.append((server, dom, i, bool(self.ecs_subnet) and i == 0))
-
-        total = len(jobs) + (len(self.servers) if self.warmup else 0)
+        total = len(self.servers) * len(domains) * self.repeat
+        if self.warmup:
+            total += len(self.servers)
         self._done = 0
-
-        async def do(server: DnsServer, dom: DomainSpec, ecs: bool) -> None:
-            async with self._global_sem, self._server_sems[server.id]:
-                rec = await self.query_once(server, dom, "A", ecs=ecs)
-                records.append(rec)
-                self._tick(total, f"{server.name} → {dom.name}")
 
         if self.warmup and domains:
             warm_domain = domains[0]
@@ -231,8 +299,26 @@ class DnsResolver:
                 *(self._warm(server, warm_domain, total) for server in self.servers)
             )
 
-        await asyncio.gather(*(do(s, d, e) for s, d, _i, e in jobs))
-        return records
+        return await self._run_pool(
+            job_iter=self._iter_jobs(domains),
+            total=total,
+            label_fn=lambda s, d: f"{s.name} → {d.name}",
+        )
+
+    def _iter_jobs(
+        self, domains: list[DomainSpec]
+    ) -> Iterator[tuple[DnsServer, DomainSpec, str, bool]]:
+        """生成器：惰性产出所有 job tuple，避免全量内存分配。
+
+        投喂顺序：domain 优先（round-robin）。同一轮 repeat 内，
+        所有 domain × server 交替产出，保证 worker pool 中每个 server
+        都能同时被处理，避免 server 串行排队。
+        """
+        for i in range(self.repeat):
+            ecs = bool(self.ecs_subnet) and i == 0
+            for dom in domains:
+                for server in self.servers:
+                    yield (server, dom, "A", ecs)
 
     async def _warm(self, server: DnsServer, dom: DomainSpec, total: int) -> None:
         async with self._global_sem:
@@ -242,18 +328,19 @@ class DnsResolver:
     # -- 劫持探针 ---------------------------------------------------------
     async def run_probes(self, probes: list[DomainSpec]) -> list[ResolveRecord]:
         """随机子域必须返回 NXDOMAIN；返回 A 记录即为劫持。"""
-        records: list[ResolveRecord] = []
         total = len(self.servers) * len(probes)
         self._done = 0
 
-        async def do(server: DnsServer, dom: DomainSpec) -> None:
-            async with self._global_sem, self._server_sems[server.id]:
-                rec = await self.query_once(server, dom, "A")
-                records.append(rec)
-                self._tick(total, f"{server.name} 劫持探测")
+        def _iter() -> Iterator[tuple[DnsServer, DomainSpec, str, bool]]:
+            for dom in probes:
+                for server in self.servers:
+                    yield (server, dom, "A", False)
 
-        await asyncio.gather(*(do(s, d) for s in self.servers for d in probes))
-        return records
+        return await self._run_pool(
+            job_iter=_iter(),
+            total=total,
+            label_fn=lambda s, _d: f"{s.name} 劫持探测",
+        )
 
     # -- ECS 对比 ---------------------------------------------------------
     async def ecs_compare(
@@ -271,5 +358,15 @@ class DnsResolver:
             if plain.ok or ecs.ok:
                 out[dom.name] = (plain.answers, ecs.answers)
 
-        await asyncio.gather(*(one(d) for d in domains))
+        tasks = [asyncio.create_task(one(d)) for d in domains]
+        try:
+            for coro in asyncio.as_completed(tasks):
+                await coro
+        except asyncio.CancelledError:
+            for t in tasks:
+                t.cancel()
+            raise
         return out
+
+
+_NULL_SEM = asyncio.Semaphore(99999)

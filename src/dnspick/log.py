@@ -21,12 +21,12 @@ from typing import ClassVar
 
 from PySide6.QtCore import QObject, Signal
 
-_LOG_DIR = Path(".dnspick")
+_PACKAGE_ROOT = Path(__file__).resolve().parent.parent  # src/
+
+_LOG_DIR = _PACKAGE_ROOT.parent / ".dnspick"
 _LOG_FILE = _LOG_DIR / "dnspick.log"
 _MAX_BYTES = 5 * 1024 * 1024  # 5MB
 _BACKUP_COUNT = 3
-
-_PACKAGE_ROOT = Path(__file__).resolve().parent.parent  # src/
 
 # CLI 控制台 handler（rich Console 或标准 stderr stream）
 _cli_handler: logging.Handler | None = None
@@ -38,6 +38,14 @@ class LogLevel(enum.Enum):
     WARN = "warn"
     ERROR = "error"
 
+    @classmethod
+    def _missing_(cls, value: object) -> LogLevel:
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.lower():
+                    return member
+        raise ValueError(f"无效的日志等级: {value}")
+
 
 class _LogManager(QObject):
     """全局日志管理器。
@@ -45,6 +53,8 @@ class _LogManager(QObject):
     公开接口：
       - log.info(msg) / log.warn(msg) / log.error(msg) / log.debug(msg)
       - log.appended  → Signal(str, str, str, str)  (ts, module, level, message)
+      - log.set_level(level) → 运行时调整日志等级
+      - log.level → 当前日志等级
       - log.set_console(console) → 为 CLI 模式启用终端实时输出
     """
 
@@ -59,11 +69,12 @@ class _LogManager(QObject):
 
     def __init__(self) -> None:
         super().__init__()
+        self._level: LogLevel = LogLevel.DEBUG
         self._logger = logging.getLogger("dnspick")
         self._logger.setLevel(logging.DEBUG)
         self._logger.propagate = False
         _LOG_DIR.mkdir(parents=True, exist_ok=True)
-        handler = RotatingFileHandler(
+        self._file_handler = RotatingFileHandler(
             str(_LOG_FILE),
             maxBytes=_MAX_BYTES,
             backupCount=_BACKUP_COUNT,
@@ -73,8 +84,23 @@ class _LogManager(QObject):
             "[%(asctime)s] [%(name)s] [%(levelname)s] %(message)s",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
-        handler.setFormatter(fmt)
-        self._logger.addHandler(handler)
+        self._file_handler.setFormatter(fmt)
+        self._file_handler.setLevel(self._LEVEL_MAP[self._level])
+        self._logger.addHandler(self._file_handler)
+
+    @property
+    def level(self) -> LogLevel:
+        return self._level
+
+    def set_level(self, level: LogLevel | str) -> None:
+        """运行时调整日志等级。影响文件写入、Signal 推送和 CLI 输出。"""
+        if isinstance(level, str):
+            level = LogLevel(level)
+        self._level = level
+        py_level = self._LEVEL_MAP[level]
+        self._file_handler.setLevel(py_level)
+        if _cli_handler is not None:
+            _cli_handler.setLevel(py_level)
 
     # ── CLI 终端输出 ─────────────────────────────────────────
 
@@ -95,7 +121,7 @@ class _LogManager(QObject):
         else:
             _cli_handler = _RichHandler(console_object)
         self._logger.addHandler(_cli_handler)
-        _cli_handler.setLevel(logging.INFO)
+        _cli_handler.setLevel(self._LEVEL_MAP[self._level])
 
     # ── 公开 API ──────────────────────────────────────────────
 
@@ -109,20 +135,18 @@ class _LogManager(QObject):
         self._emit(LogLevel.ERROR, msg)
 
     def debug(self, msg: str) -> None:
-        """debug 不写文件，只通过 appended Signal 推送。"""
-        ts = datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M:%S")
-        modpath = self._caller_module()
-        self.appended.emit(ts, modpath, LogLevel.DEBUG.value, msg)
+        self._emit(LogLevel.DEBUG, msg)
 
     # ── 内部 ─────────────────────────────────────────────────
 
     def _emit(self, level: LogLevel, msg: str) -> None:
         ts = datetime.now(UTC).astimezone().strftime("%Y-%m-%d %H:%M:%S")
         modpath = self._caller_module()
-        # 写入文件（含模块路径）
+        # 写入文件（handler 级别过滤）
         self._logger.log(self._LEVEL_MAP[level], "[%s] %s", modpath, msg)
-        # 推送 Signal
-        self.appended.emit(ts, modpath, level.value, msg)
+        # Signal 推送（按当前级别过滤）
+        if self._LEVEL_MAP[level] >= self._LEVEL_MAP[self._level]:
+            self.appended.emit(ts, modpath, level.value, msg)
 
     @staticmethod
     def _caller_module() -> str:

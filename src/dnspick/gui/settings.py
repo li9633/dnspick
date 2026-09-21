@@ -24,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from dnspick.gui.runner_config import RunnerConfig
+from dnspick.log import LogLevel, log
 from dnspick.models import DnsServer, Protocol
 
 _VENDOR_NAMES: dict[str, str] = {
@@ -234,6 +235,13 @@ class SettingsDialog(QDialog):
         self.api_discovery.setChecked(t.api_discovery_enabled)
         form.addRow(self.api_discovery)
 
+        self.log_level_combo = QComboBox()
+        self.log_level_combo.addItems([e.value for e in LogLevel])
+        self.log_level_combo.setCurrentText(self.runner.log_level)
+        self.log_level_combo.currentTextChanged.connect(self._on_settings_log_level_changed)
+        self.runner.log_level_changed.connect(self._sync_settings_log_level)
+        form.addRow("日志等级", self.log_level_combo)
+
         w = QWidget()
         w.setLayout(form)
         return w
@@ -337,6 +345,10 @@ class SettingsDialog(QDialog):
                 t.w_speed = float(self.w_speed.value())
         t.api_discovery_enabled = self.api_discovery.isChecked()
 
+        # 日志等级
+        self.runner.log_level = self.log_level_combo.currentText()
+        log.set_level(self.runner.log_level)
+
         # 写回 RunnerConfig（ECS / deep 通过 toggle 已实时同步）—— 兜底通知
         self.runner.use_ecs_changed.emit(self.ecs.isChecked())
         self.runner.deep_traceroute_changed.emit(self.deep.isChecked())
@@ -352,6 +364,9 @@ class SettingsDialog(QDialog):
     def _on_settings_deep_toggled(self, checked: bool) -> None:
         self.runner.deep_traceroute = checked
 
+    def _on_settings_log_level_changed(self, level: str) -> None:
+        self.runner.log_level = level
+
     def _sync_settings_ecs(self, v: bool) -> None:
         if self.ecs.isChecked() != v:
             self.ecs.setChecked(v)
@@ -359,3 +374,7 @@ class SettingsDialog(QDialog):
     def _sync_settings_deep(self, v: bool) -> None:
         if self.deep.isChecked() != v:
             self.deep.setChecked(v)
+
+    def _sync_settings_log_level(self, level: str) -> None:
+        if self.log_level_combo.currentText() != level:
+            self.log_level_combo.setCurrentText(level)

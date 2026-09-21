@@ -19,7 +19,9 @@ import asyncio
 import json
 import re
 import ssl
+import threading
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from dnspick.log import log
@@ -302,6 +304,11 @@ class ApiDomainDiscovery:
         self.crt_timeout = crt_timeout
         self.max_per_source = max_per_source
         self.min_cache = min_cache
+        self._cancelled = threading.Event()
+
+    def cancel(self) -> None:
+        """标记取消，抑制后续日志并尽早退出。"""
+        self._cancelled.set()
 
     # -- 缓存检查 --------------------------------------------------------
 
@@ -325,7 +332,8 @@ class ApiDomainDiscovery:
             log.debug(f"HTML 发现 {main_domain}: {len(domains)} 个关联域名")
             return domains, True, ""
         except Exception as e:
-            log.warn(f"HTML 发现失败 {main_domain}: {e}")
+            if not self._cancelled.is_set():
+                log.warn(f"HTML 发现失败 {main_domain}: {e}")
             return set(), False, str(e)
 
     # -- 策略2 ------------------------------------------------------------
@@ -341,19 +349,27 @@ class ApiDomainDiscovery:
             log.debug(f"crt.sh 发现 {main_domain}: {len(domains)} 个关联域名")
             return domains, True, ""
         except Exception as e:
-            log.warn(f"crt.sh 查询失败 {main_domain}: {e}")
+            if not self._cancelled.is_set():
+                log.warn(f"crt.sh 查询失败 {main_domain}: {e}")
             return set(), False, str(e)
 
     # -- 主入口 ----------------------------------------------------------
 
-    async def discover(self, main_domain: str) -> DiscoveryResult:
+    async def discover(
+        self, main_domain: str,
+        on_step: Callable[[], None] | None = None,
+    ) -> DiscoveryResult:
         """对单个主域名执行发现。
 
-        先查缓存，缓存不足时依次执行 HTML 抓取和 crt.sh 查询。
+        先查缓存，缓存不足时并发执行 HTML 抓取和 crt.sh 查询。
+        on_step 在每子步（HTML / CRT）完成时回调。
         """
         cached = self._check_cache(main_domain)
         if cached is not None:
             log.debug(f"API 发现 {main_domain}: 命中缓存 ({len(cached)} 个)")
+            if on_step:
+                on_step()
+                on_step()
             return DiscoveryResult(
                 main_domain=main_domain,
                 html_domains=cached,
@@ -362,44 +378,75 @@ class ApiDomainDiscovery:
 
         result = DiscoveryResult(main_domain=main_domain)
 
-        html_doms, ok, err = await asyncio.to_thread(
-            self._discover_html, main_domain,
-        )
+        html_task = asyncio.to_thread(self._discover_html, main_domain)
+        crt_task = asyncio.to_thread(self._discover_crt, main_domain)
+
+        html_doms, ok, err = await html_task
         result.html_domains = html_doms
         result.html_success = ok
         result.html_error = err
         if ok and html_doms:
             self.store.upsert_batch(main_domain, html_doms, "html")
+        if on_step:
+            on_step()
 
-        crt_doms, ok2, err2 = await asyncio.to_thread(
-            self._discover_crt, main_domain,
-        )
+        crt_doms, ok2, err2 = await crt_task
         result.crt_domains = crt_doms
         result.crt_success = ok2
         result.crt_error = err2
         if ok2 and crt_doms:
             self.store.upsert_batch(main_domain, crt_doms, "crt_sh")
+        if on_step:
+            on_step()
 
         total = len(result.all_domains)
         if total:
-            log.info(f"API 发现 {main_domain}: 共 {total} 个关联域名")
+            log.debug(f"API 发现 {main_domain}: 共 {total} 个关联域名")
         elif not result.from_cache:
             log.debug(f"API 发现 {main_domain}: 无关联域名")
 
         return result
 
+    async def _safe_discover(
+        self, domain: DomainSpec,
+        on_step: Callable[[], None] | None = None,
+    ) -> DiscoveryResult:
+        """包装 discover，捕获异常返回带主域名的空结果。"""
+        if self._cancelled.is_set():
+            return DiscoveryResult(main_domain=domain.name)
+        try:
+            return await self.discover(domain.name, on_step=on_step)
+        except Exception:
+            return DiscoveryResult(main_domain=domain.name)
+
     async def discover_all(
         self, domains: list[DomainSpec],
+        on_progress: Callable[[int, int, str], None] | None = None,
     ) -> dict[str, DiscoveryResult]:
-        """并发发现多个主域名的关联域名。"""
-        tasks = [self.discover(d.name) for d in domains]
-        gathered = await asyncio.gather(*tasks, return_exceptions=True)
+        """并发发现多个主域名的关联域名。
+
+        每域名 2 子步（HTML + CRT 并发执行），通过 on_progress 汇报确定进度。
+        """
+        total = len(domains) * 2
         result: dict[str, DiscoveryResult] = {}
-        for d, res in zip(domains, gathered, strict=False):
-            result[d.name] = (
-                res if isinstance(res, DiscoveryResult)
-                else DiscoveryResult(main_domain=d.name)
-            )
+        step_count = 0
+
+        def _make_step(domain: DomainSpec) -> Callable[[], None]:
+            def _step() -> None:
+                nonlocal step_count
+                step_count += 1
+                if on_progress:
+                    on_progress(step_count, total, domain.name)
+            return _step
+
+        coros = [self._safe_discover(d, on_step=_make_step(d)) for d in domains]
+
+        for coro in asyncio.as_completed(coros):
+            if self._cancelled.is_set():
+                break
+            res = await coro
+            result[res.main_domain] = res
+
         return result
 
     @staticmethod
