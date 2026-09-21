@@ -234,14 +234,17 @@ class ResultStore:
         self.init()
         with self._conn() as conn:
             rows = conn.execute(
-                """SELECT m.*,
-                          (SELECT server_name FROM server_score
-                           WHERE measurement_id = m.id
-                           ORDER BY total_score DESC LIMIT 1) as top_name,
-                          (SELECT total_score FROM server_score
-                           WHERE measurement_id = m.id
-                           ORDER BY total_score DESC LIMIT 1) as top_score
+                """SELECT m.*, top.server_name AS top_name, top.total_score AS top_score
                    FROM measurement m
+                   LEFT JOIN (
+                       SELECT s.measurement_id, s.server_name, s.total_score
+                       FROM server_score s
+                       WHERE s.rowid = (
+                           SELECT s2.rowid FROM server_score s2
+                           WHERE s2.measurement_id = s.measurement_id
+                           ORDER BY s2.total_score DESC LIMIT 1
+                       )
+                   ) top ON top.measurement_id = m.id
                    ORDER BY m.created_at DESC
                    LIMIT ?""",
                 (limit,),
