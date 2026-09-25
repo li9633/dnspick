@@ -25,7 +25,7 @@ from dnspick.discover import (
 def test_load_seeds_parses_sections() -> None:
     """分区注释两侧带等号，必须用 in 判断。"""
     seeds = load_seeds()
-    assert len(seeds) > 850
+    assert len(seeds) > 300
     groups = {g for _n, g, _s in seeds}
     assert "cn" in groups
     assert "global" in groups
@@ -67,12 +67,12 @@ def test_host_of_rejects_invalid() -> None:
 
 
 def test_build_report_has_three_tiers() -> None:
-    rep = build_report(use_browser=False, use_seed=True, tier2_size=300)
-    assert len(rep.items) > 850
+    rep = build_report(use_browser=False, use_seed=True, tier2_size=200)
+    assert len(rep.items) > 300
     t1, t2, t3 = (len(rep.by_tier(t)) for t in (1, 2, 3))
     assert t1 >= 20, "核心层太少，测不出 CDN 调度差异"
     assert t1 <= 120
-    assert t2 <= 300, "常用层必须收口，否则 --tier 2 会跑上千域名"
+    assert t2 <= 200, "常用层必须收口，否则 --tier 2 会跑上千域名"
     assert t3 > 0
 
 

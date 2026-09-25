@@ -257,7 +257,7 @@ class DomainManagerDialog(QDialog):
         self._table.setRowCount(len(visible))
         for row, item in enumerate(visible):
             # 启用复选框
-            chk = QTableWidgetItem("✓" if item.enabled else "✗")
+            chk = QTableWidgetItem("")
             chk.setFlags(chk.flags() | Qt.ItemFlag.ItemIsUserCheckable)
             chk.setCheckState(Qt.CheckState.Checked if item.enabled else Qt.CheckState.Unchecked)
             chk.setData(Qt.ItemDataRole.UserRole, item.name)

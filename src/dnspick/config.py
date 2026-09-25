@@ -38,7 +38,7 @@ class Tunables:
     hop_max: int = 30
     hop_timeout: float = 1.0
     icmp_enabled: bool = True
-    icmp_count: int = 4
+    icmp_count: int = 2
     icmp_timeout_s: float = 4.0
     icmp_concurrency: int = 32
     deep_traceroute: bool = False  # 深度模式：全量 traceroute（慢，且部分平台需提权）

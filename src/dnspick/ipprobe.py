@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import ipaddress
 import platform
 import re
@@ -237,7 +238,7 @@ class IpProber:
         hop_max: int = 30,
         hop_timeout: float = 1.0,
         icmp_enabled: bool = True,
-        icmp_count: int = 4,
+        icmp_count: int = 2,
         icmp_timeout: float = 4.0,
         icmp_concurrency: int = 32,
         deep_traceroute: bool = False,
@@ -255,7 +256,13 @@ class IpProber:
         self.icmp_concurrency = icmp_concurrency
         self.deep_traceroute = deep_traceroute
         self.on_progress = on_progress
-        self._max_workers = max(8, min(icmp_concurrency * 2, 64))
+        self._max_workers = max(16, min(icmp_concurrency, 128))
+        self._executor: concurrent.futures.ThreadPoolExecutor | None = None
+
+    def shutdown(self) -> None:
+        if self._executor is not None:
+            self._executor.shutdown(wait=False)
+            self._executor = None
 
     async def run(self, ips: list[str]) -> dict[str, IpProbeResult]:
         results: dict[str, IpProbeResult] = {}
@@ -293,7 +300,7 @@ class IpProber:
     ) -> None:
         """ICMP 与 traceroute 走线程池，避免阻塞事件循环。
 
-        逐个 IP 提交 + 逐个报告进度，不再把所有工作一次性提交后等全部完成才报进度。
+        使用独立 ThreadPoolExecutor 而非默认线程池，确保实际并发数匹配信号量。
         """
         if not self.icmp_enabled and not self.deep_traceroute:
             return
@@ -304,18 +311,23 @@ class IpProber:
         icmp_total = len(ips)
         icmp_done = 0
 
+        if self._executor is None:
+            self._executor = concurrent.futures.ThreadPoolExecutor(
+                max_workers=self._max_workers,
+            )
+
         async def process_one(ip: str) -> None:
             nonlocal icmp_done
             async with sem:
 
                 async def _icmp() -> tuple:
                     return await loop.run_in_executor(
-                        None, icmp_ping_blocking, ip, self.icmp_count, self.icmp_timeout,
+                        self._executor, icmp_ping_blocking, ip, self.icmp_count, self.icmp_timeout,
                     )
 
                 async def _trace() -> list[str]:
                     return await loop.run_in_executor(
-                        None, traceroute_blocking, ip, self.hop_max,
+                        self._executor, traceroute_blocking, ip, self.hop_max,
                     )
 
                 # ICMP 和 traceroute 可以并行提交到线程池

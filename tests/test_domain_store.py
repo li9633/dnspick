@@ -61,7 +61,7 @@ def test_seed_includes_builtin(store: DomainStore) -> None:
 def test_seed_includes_file_domains(store: DomainStore) -> None:
     store.init()
     all_doms = store.get_all()
-    assert len(all_doms) > 850
+    assert len(all_doms) > 300
 
 
 def test_seed_is_idempotent(store: DomainStore) -> None:

@@ -40,6 +40,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from dnspick.log import log
 from dnspick.store import ResultStore, ScoreFilter
 
 _VERDICT_COLOR: dict[str, QColor] = {
@@ -970,6 +971,10 @@ class HistoryWindow(QDialog):
         )
 
     def _export_smartdns(self) -> None:
+        """导出 SmartDNS 配置。
+
+        仅导出当前筛选条件下结论为「推荐」的服务器，顺序与表格排序一致。
+        """
         if not self._scores:
             return
         path, _ = QFileDialog.getSaveFileName(
@@ -984,10 +989,38 @@ class HistoryWindow(QDialog):
         _SMARTDNS_PROTO = {
             "udp": "udp", "tcp": "tcp", "dot": "tls", "doh": "https",
         }
-        seen: set[str] = set()
-        blocks: list[str] = []
-
+        # 按表格视觉顺序收集推荐服务器
+        recommend_keyed: dict[tuple[str, str], dict] = {}
         for s in self._scores:
+            if s.get("verdict") != "recommend":
+                continue
+            addr = str(s.get("address", ""))
+            proto = str(s.get("protocol", "udp"))
+            recommend_keyed[(addr, proto)] = s
+
+        ordered: list[dict] = []
+        seen: set[tuple[str, str]] = set()
+        for row in range(self._flat_table.rowCount()):
+            addr_item = self._flat_table.item(row, 2)
+            proto_item = self._flat_table.item(row, 3)
+            if addr_item is None:
+                continue
+            addr = addr_item.text()
+            proto = proto_item.text() if proto_item else "udp"
+            key = (addr, proto)
+            if key in seen:
+                continue
+            seen.add(key)
+            rec = recommend_keyed.get(key)
+            if rec is not None:
+                ordered.append(rec)
+
+        if not ordered:
+            log.info("SmartDNS 导出：筛选后无推荐服务器")
+            return
+
+        blocks: list[str] = []
+        for s in ordered:
             proto = str(s.get("protocol", "udp"))
             sd_proto = _SMARTDNS_PROTO.get(proto, proto)
             addr = str(s.get("address", ""))
@@ -997,10 +1030,6 @@ class HistoryWindow(QDialog):
                 if vendor
                 else s.get("server_name", "unknown")
             )
-            dedup_key = f"{addr}|{sd_proto}"
-            if dedup_key in seen:
-                continue
-            seen.add(dedup_key)
             blocks.append(
                 "config server\n"
                 f"        option name '{name}'\n"
@@ -1010,6 +1039,7 @@ class HistoryWindow(QDialog):
             )
 
         Path(path).write_text("\n".join(blocks), encoding="utf-8")
+        log.info(f"SmartDNS 导出完成: {len(ordered)} 台推荐服务器")
 
     def _delete_entry(self) -> None:
         if self._current_mid is None:

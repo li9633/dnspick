@@ -131,13 +131,16 @@ class Runner:
             if prev_name not in self._stage_skipped:
                 duration = time.time() - self._stage_started if self._stage_started else 0.0
                 self._emit(prev_name, 1, 1, f"完成 · 耗时 {duration:.1f}s", "done")
+                log.info(f"完成 {prev_name} · 耗时 {duration:.1f}s")
         self._stage_idx = _STAGE_INDEX.get(name, 0)
         self._stage_started = time.time()
+        log.info(f"开始 {name}")
 
     def _skip_stage(self, name: str, reason: str = "") -> None:
         self._enter_stage(name)
         self._emit(name, 0, 0, reason or "已跳过", "skipped")
         self._stage_skipped.add(name)
+        log.info(f"跳过 {name}: {reason or '已跳过'}")
 
     def _check_cancel(self) -> None:
         """在阶段之间检查取消标记，及时终止避免浪费计算。"""
@@ -188,6 +191,13 @@ class Runner:
             raise asyncio.CancelledError()
         started = time.time()
         t = self.cfg.tunables
+        log.info("============= 测量开始 =============")
+        log.info(
+            f"服务器 {len(self.cfg.active_servers())} 台 | "
+            f"DNS 并发 {t.resolve_concurrency} | "
+            f"TCP 并发 {t.tcp_concurrency} | "
+            f"ICMP 并发 {t.icmp_concurrency}"
+        )
 
         # === 阶段A: 域名收集 ============================================
         summary = RunSummary(started_at=started)
@@ -330,6 +340,7 @@ class Runner:
             on_progress=on_probe_progress,
         )
         ip_results = await prober.run(unique_ips)
+        prober.shutdown()
         self._check_cancel()
 
         if not t.icmp_enabled and not t.deep_traceroute:
@@ -370,13 +381,14 @@ class Runner:
         # 末阶段 done
         duration = time.time() - self._stage_started
         self._emit("评分", 1, 1, f"完成 · 耗时 {duration:.1f}s", "done")
+        log.info(f"完成 评分 · 耗时 {duration:.1f}s")
 
         summary.duration_s = round(time.time() - started, 1)
 
         recommend = sum(1 for r in reports if r.verdict and r.verdict.value == "recommend")
         log.info(
-            f"测量完成 · 耗时 {summary.duration_s}s · "
-            f"{summary.servers} 台服务器 · {len(reports)} 份报告 · {recommend} 台推荐"
+            f"============= 测量结束 · 总耗时 {summary.duration_s}s | "
+            f"{summary.servers} 台服务器 | {len(reports)} 份报告 | {recommend} 台推荐 ============="
         )
 
         return RunResult(
