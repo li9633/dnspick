@@ -4,9 +4,15 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .mypy_cache/
+*.log
 smoke-result.json
 history/
 *.egg-info/
 .dnspick/
 dist/
 build/
+.coverage
+coverage.xml
+*.swp
+*~
+.Trash-*
