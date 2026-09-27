@@ -1,210 +1,255 @@
 # dnspick
 
-**为家庭网络挑最优 DNS 上游的测量器。** 只做测量与建议，不改任何系统设置——
-结果你自己填进 OpenWrt 的 SmartDNS。
+**为家庭网络挑选最优 DNS 上游的测量器。** 只做测量与建议，不改任何系统设置——结果你自己填进 OpenWrt 的 SmartDNS 或其他分流代理。
 
-## 它到底在测什么
+---
+
+## 它和传统 DNS 优选有什么不同？
+
+市面上多数工具只看一件事：**DNS 响应有多快。** 这在家庭场景里意义不大——本地缓存一上，RTT 差异就被抹平了。
+
+真正影响体验的是：**DNS 把淘宝解析到了哪个 CDN 节点？** 是离你最近的省节点，还是绕到了北京、上海甚至海外？
+
+所以 dnspick 的流程是两段式的：
+
+```
+DNS 解析矩阵          →  每台 DNS × 每个域名 × N 次，收集它返回的 IP 集合
+IP 链路探测           →  对去重后的所有 IP 做 TCP 握手、跳数、ICMP、归属地
+分组独立评分           →  国内/国外分开打分，最终产出四档结论
+```
 
 一句话：**不看 DNS 回答得多快，看它给你的 IP 有多好。**
 
-DNS 自身的响应延迟在家庭场景几乎没意义——本地一缓存就被抹平了。真正影响体验的是：
-它把淘宝解析到山东联通节点，还是解析到了北京、上海甚至海外。
+---
 
-所以流程是两段式的：
+## 测量流程
 
-```
-阶段0  环境探测       出口公网 IP / ECS 子网
-阶段1  解析矩阵       每台 DNS × 每个域名 × N 次 → IP 列表 + RTT
-阶段2  IP 链路探测    去重后的 IP 池 → TCP 握手 / 跳数 / ICMP / traceroute
-阶段3  归属地         GeoIP（可降级为未知）
-阶段4  评分与结论     分组打分 + 可直接抄进 SmartDNS 的建议
-```
+| 阶段 | 内容 | 说明 |
+|---|---|---|
+| 环境探测 | 出口公网 IP / ECS 子网 | 自动检测，仅用于信息展示和 ECS 对比 |
+| 域名收集 | 从 SQLite 数据库加载启用域名 | 内置 + 浏览器历史 + 手动添加 + API 发现，统一管理 |
+| API 发现（可选） | HTML 首页 + crt.sh 证书日志 | 自动发现主站的关联域名 |
+| DNS 解析 | 服务器 × 域名 × 重复 N 次矩阵 | 支持 UDP / TCP / DoT / DoH |
+| ECS 对比（可选） | 带/不带 ECS 两次查询结果对比 | 检测 DNS 是否真正支持 ECS |
+| TCP 探测 | 多端口（443/80/8443）× 多次握手 | 取 p50 延迟与成功率——最贴近真实访问体验 |
+| ICMP 探测 | 系统 ping（线程池）+ 可选跳数探测 | 辅助指标；跳数通过 TCP TTL 递增法（免 raw socket）实现 |
+| 归属地 | GeoIP（可降级为未知） | 用于就近性评分和污染判定 |
+| 综合评分 | 四维加权 + 两阶段流水线 | 产出结论、建议和可直接填进 SmartDNS 的配置 |
 
-### 评分口径对齐 SmartDNS 的 fastest-ip
+---
 
-SmartDNS 会把上游返回的全部 IP 汇总、本地测速，只把最快的那个交给客户端。
-所以我们对「某 DNS 在某域名上的体验值」取的是
-**它返回的 IP 集合里最快的那个可达 IP**，再对同组域名取中位数。
-直接算「该 DNS 返回所有 IP 的平均延迟」会低估返回多 IP 的 CDN 型 DNS——那是错的口径。
-
-### 四项判据
+## 四项判据
 
 | 维度 | 怎么测 | 为什么重要 |
 |---|---|---|
-| 就近性 | 国内 CDN 域名解析出的 IP，TCP 延迟在同组内的相对排名 | 决定打开淘宝/抖音的实际速度 |
-| 可达性 | 对这些 IP 做 TCP 443 握手，取 p50 与成功率 | IP 解析对了但链路绕路，一样慢 |
-| 路径 | 跳数（TCP TTL 递增法，免权限） | 看是否绕路 |
-| 干净度 | 随机子域必须 NXDOMAIN；国外域名返回境内 IP 即判污染 | 污染比慢更致命 |
+| **就近性** | 国内 CDN 域名解析出的 IP，TCP 延迟在同组内的相对排名 | 决定打开淘宝/抖音的实际速度 |
+| **速度** | 对该 DNS 返回的 IP 做 TCP 握手，取每域名最快 IP 的组中位延迟 | 对齐 SmartDNS 的 `fastest-ip` 语义 |
+| **稳定性** | 解析成功率（3/4）+ IP 可达率（1/4）+ TCP 握手成功率的加权 | 解析频繁失败或 IP 不可达比慢更致命 |
+| **路径** | TCP TTL 递增法数跳数 | 看运营商是否绕路到外省或海外 |
 
-国内外**分组评分**（国内权重默认 0.7、国外 0.3）。很多 DNS 是「国内快国外慢」或反之，
-混在一起打分会掩盖真相。
+此外还会额外检测：
+
+- **劫持**：对随机不存在子域做查询，返回结果即判劫持
+- **污染**：国外域名解析出境内 IP 即判污染
+- **ECS 支持**：对比带/不带 ECS 子网的返回结果
+- **环境诊断**：识别透明代理/本地拦截，提示用户测了个寂寞
+
+---
+
+## 评分机制
+
+### 分组独立评分
+
+国内域名和国外域名 **分开打分**（国内权重默认 0.7、国外 0.3）。很多 DNS 是「国内快国外慢」或反之，混在一起打分会掩盖真相。
+
+### 两阶段流水线
+
+1. **分组子分计算**：对每台 DNS 的国内/国外组分别计算速度分、路径分、稳定性分、就近分（均为 0~100）
+2. **总分合成与结论判定**：
+   ```
+   总分 = cn_weight × 国内组得分 + global_weight × 国外组得分
+         - 劫持扣分（60 分）- 污染扣分（25 分）
+   ```
+   根据总分和各分项情况，给出四档结论：**推荐 / 备用 / 限定分组 / 避免**
+
+### 预设评分档位
+
+通过 `--profile` / GUI 下拉框切换，调整四项权重：
+
+| 档位 | 速度 | 路径 | 稳定 | 就近 | 适合场景 |
+|---|---|---|---|---|---|
+| `balanced` | 30 | 15 | 25 | 30 | 日常综合 |
+| `speed` | 55 | 10 | 15 | 20 | 游戏/实时通信 |
+| `stable` | 20 | 10 | 50 | 20 | 下载/串流 |
+| `cdn` | 20 | 10 | 15 | 55 | 网站/CDN |
+| `privacy` | 25 | 10 | 20 | 20 | 隐私优先 |
+
+GUI 中可在设置面板拖动滑块自定义权重。
+
+---
 
 ## 安装
 
-需要 **Python 3.13.7+**。
+需要 **Python 3.13.7+**。使用 [uv](https://docs.astral.sh/uv/) 管理依赖：
 
 ```bash
 # 桌面端：uv sync 会按 default-groups 一次装好 GUI + 开发工具
 uv sync
 
 # 只要命令行（OpenWrt / 无显示环境，不装 PySide6）
-uv sync --no-group gui
+uv sync --no-group gui --no-group dev
+
+# 启用 GeoIP（可选，需要 MaxMind mmdb）
+uv sync
+pip install maxminddb
 ```
 
-若机器上还没有 3.13.7+，让 uv 自己拉一个：
+### 平台兼容性
+
+| 平台 | 命令行 | GUI | 备注 |
+|---|---|---|---|
+| Windows | ✅ | ✅ | 完整支持 |
+| Linux | ✅ | ✅ | 完整支持 |
+| OpenWrt | ✅（推荐） | ❌ | 不装 PySide6 即可，免拉 600MB GUI 栈 |
+| macOS | ✅ | ✅ | 需自行处理 PySide6 安装 |
+
+---
+
+## 使用方法
+
+### 桌面 GUI（推荐）
 
 ```bash
-uv python install 3.13
-uv python pin 3.13      # 写入 .python-version，之后 uv sync 自动用它
-```
-
-> `uv sync` 不需要先 `uv venv`，它会自己建 `.venv` 并生成 `uv.lock`。
-> PySide6 放在 `dependency-groups` 而不是 `optional-dependencies`：
-> 分组不进入包的分发元数据，因此在 OpenWrt 上 `uv sync --no-group gui`
-> 不会拉那 600MB 的 GUI 栈。
-
-## 命令行
-
-```bash
-# 默认档位跑一次
-dnspick run
-
-# 只关心 CDN 调度质量
-dnspick run --profile cdn --top 5
-
-# 只测 UDP，自定义域名集，存 JSON
-dnspick run --protocol udp --domains resources/domains.toml --json out.json
-
-# 深度模式：对每个 IP 跑完整 traceroute（慢很多）
-dnspick run --deep
-
-# 启用 ECS 对比查询（会先探测公网出口 IP）
-dnspick run --ecs
-
-# 查看内置清单（--all 显示含默认关闭的加密端点）
-dnspick list-servers --all
-```
-
-档位：`balanced`（默认）/ `speed` / `stable` / `cdn` / `privacy`。
-
-## 图形界面
-
-```bash
+uv run dnspick-gui
+# 或
 dnspick-gui
 ```
 
-- 结果表格可点列排序，点行看该 DNS 的分项明细
-- 设置里勾选参与测量的 DNS、调权重滑块与超时/并发
-- 「深度 traceroute」和「ECS 对比」默认关闭，按需开启
-- 结论区直接给出可抄进 SmartDNS 的建议 + 各 DNS 最快 IP 的归属地
+GUI 提供：
+- **运行配置仪表盘**：协议分布、域名配置摘要、一键启动/停止
+- **设置面板**：DNS 服务器勾选、测量参数调整、评分权重自定义
+- **进度面板**：实时显示各阶段进度
+- **实时日志**：串流显示，日志等级可在设置中调整
+- **优选历史**：Tab 化结果分析中心（结果总览 / 分组对比 / 分析建议）
+- **SmartDNS 导出**：仅导出推荐服务器，受筛选条件和表格排序影响
 
-## 三个平台
-
-| 平台 | 说明 |
-|---|---|
-| Windows | `dnspick-gui` 完整可用。TCP 握手与跳数探测免管理员；完整 traceroute 走系统 `tracert`，无需提权 |
-| Linux | CLI 完整可用；GUI 装 PySide6 后可用。ICMP 需要 `ping_group_range` 或 root，否则自动跳过 |
-| OpenWrt | 跑 CLI（`uv pip install -e .`）。ICMP/traceroute 若镜像里没有会自动跳过，不影响主结论 |
-
-## 并发模型
-
-- **海量 I/O（DNS 查询、TCP 握手、TTL 跳数探测）→ asyncio**。全局 semaphore 限流，
-  并单独限制单台 server 内的并发——几十个请求互相排队，测出来的是排队时间不是网络延迟。
-- **必须阻塞的系统调用（ICMP、traceroute、GeoIP 批量查询）→ ThreadPoolExecutor**。
-  通过 `asyncio.to_thread` / `run_in_executor` 调度，不阻塞事件循环。
-- **GUI** 用 `QThread` + `asyncio.run()` 桥接，不合并 Qt 与 asyncio 的事件循环。
-
-跳数用**并发 TTL 探测**而不是逐跳串行：把 ttl=1..30 的连接一次性并发发出，
-最小成功 ttl 即跳数，耗时从 O(N×timeout) 降到约 1 个 timeout。
-它不收 ICMP、不用 raw socket，因此全平台免管理员权限。
-
-## 域名集：1000+ 域名与自动发现
-
-`resources/domains.toml` 内置 **1040 个分层域名**，覆盖国内外主流站点。
-
-分层是为了解决一个实际问题：**域名不是越多越好**。长尾站点几乎都解析到
-固定的几个 IP，对「哪个 DNS 更好」没有区分度，只会稀释信号并把测量时间拉长。
-
-| tier | 数量 | 说明 |
-|---|---|---|
-| 1 核心 | 45 | CDN 调度最敏感 + 最常访问的站点。**默认只跑这层** |
-| 2 常用 | 300 | 主流站点，想看更全面的国内外表现时用 `--tier 2` |
-| 3 长尾 | 695 | 自动发现的长尾域名，默认不跑 |
+### 命令行
 
 ```bash
-dnspick run                 # tier1，45 个域名，几分钟出结果
-dnspick run --tier 2        # 345 个域名，更全面但更慢
+# 基础测量
+uv run dnspick run
+
+# 指定评分档位
+uv run dnspick run --profile speed
+
+# 只看前 5 名
+uv run dnspick run --top 5
+
+# 只测加密协议
+uv run dnspick run --protocol dot,doh
+
+# 输出 JSON / CSV
+uv run dnspick run --json result.json --csv result.csv
+
+# 深度模式（完整 traceroute，慢）
+uv run dnspick run --deep
+
+# 自定义服务器清单
+uv run dnspick run --servers my-servers.toml
+
+# 启用 API 域名发现
+uv run dnspick run --api-discovery
+
+# 查看所有选项
+uv run dnspick run --help
 ```
 
-### 自动发现
+### 域名发现
+
+自动收集你真正访问的域名（浏览器历史 + 内置种子库）：
 
 ```bash
-dnspick discover                          # 浏览器历史 + 内置种子 → domains.toml
-dnspick discover --no-browser             # 只要内置种子
-dnspick discover --online                 # 额外拉 Tranco/Majestic 榜单（需外网）
-dnspick discover --crawl www.taobao.com   # 从入口页抓外链域名
-dnspick discover --tier1 100 --tier2 500  # 调整分层规模
+uv run dnspick discover
+
+# 从指定入口抓取外链域名
+uv run dnspick discover --crawl https://example.com
+
+# 尝试拉取在线 Top 榜单
+uv run dnspick discover --online
+
+# 只看浏览器历史
+uv run dnspick discover --no-seed
+
+# 限制输出数量
+uv run dnspick discover --max 500
 ```
 
-三个来源按价值排序：
+---
 
-1. **浏览器历史（最有价值）** —— 挖的是你自己真正访问过的域名。
-   1000 个别人列表里的域名，不如 200 个你家每天真打开的域名有说服力。
-   支持 Chrome / Edge / Firefox，只读历史数据库不上传任何数据。
-2. **内置种子库** `resources/seed_domains.txt` —— 1064 个精选真实域名。
-3. **在线榜单 / 入口爬虫**（可选）—— 需要外网，失败自动跳过。
+## 内置资源
 
-种子库按分区注释自动判定国内/国外，域名按 TLD 与分区双重复核归入 `cn` / `global` 组。
+- **30+ 条 DNS 上游**：覆盖阿里、腾讯、百度、114DNS、Cloudflare、Google、Quad9、AdGuard 等，每个厂商含 UDP + 可选 DoT/DoH 端点。默认只启用各厂商的 UDP 主力节点。
+- **370+ 精选种子域名**：覆盖国内外主流网站/AxP/CDN，写入 SQLite 数据库统一管理，支持按类别筛选。
+- **内置 GeoIP 判断**：离线 CN 网段表，不联网也能判断 IP 是否国内。
 
-## 自定义
+所有内置资源都可被外部 TOML 文件覆盖或追加。
 
-- `resources/servers.toml` —— 追加自己的 DNS（家里的 SmartDNS、运营商 DNS）
-- `resources/seed_domains.txt` —— 域名种子库，`discover` 的原料
-- `--cn-list cn.txt` —— 导入完整中国 IP 段列表，提升境内/境外判定准确率
+---
 
-内置约 29 条上游（国内：阿里/腾讯 DNSPod/114/百度/360/CNNIC/华为云等；
-国外：Cloudflare/Google/Quad9/AdGuard/OpenDNS/DNS.SB/ControlD），
-并附带各家的 DoT/DoH 端点（默认关闭，需手工开启）。
-
-## 需要知道的限制
-
-1. **GeoIP 是解释性信息，不是评分的必要输入。** 精确的省市/运营商要靠 GeoIP 库，
-   离线库未必齐备、在线 API 未必可达。所以真正的就近性由 TCP 延迟与跳数这些**直接观测量**
-   表达，归属地拿不到就降级为未知，不影响结论成立。内置网段表只覆盖常见段，命中可信、未命中未知。
-2. **透明代理会让测速失去意义。** 如果本机到任意 IP 的 TCP 都被本地网关秒回
-   （所有 IP 延迟都 ~0.1ms、跳数全是 1），程序会明确给出环境提示——此时评分只反映解析可用性，
-   请在直连家庭网络的环境重测。企业网络/部分虚拟机/容器里常见这种情况。
-3. **TCP 443 不可达 ≠ IP 不可用。** 有些 CDN 边缘节点不响应裸握手。程序会依次尝试 443 → 80 → 8443，
-   仍不可达才标记 unreachable。
-4. **DNS 污染判定需要归属地数据。** 归属地缺失时该项自动跳过，不会误判。
-5. 只测解析与链路，**不做**广告拦截、家长控制、系统 DNS 写入、SmartDNS 配置生成。
-
-## 目录结构
+## 项目结构
 
 ```
-src/dnspick/
-├── models.py      数据模型（纯数据，无 IO）
-├── builtin.py     内置 DNS 清单 / 域名集 / 网段表
-├── config.py      TOML 覆盖 + 测量参数与评分权重
-├── resolver.py    阶段1 解析矩阵（asyncio）
-├── ipprobe.py     阶段2 TCP / 跳数 / ICMP / traceroute
-├── geoip.py       阶段3 归属地（mmdb → 在线 → 内置）
-├── scorer.py      阶段4 评分与结论
-├── runner.py      编排 + 环境可信度检测
-├── cli.py         typer + rich
-└── gui/           PySide6（worker 用 QThread 桥 asyncio）
+dnspick/
+├── src/dnspick/
+│   ├── gui/               # PySide6 GUI 层
+│   │   ├── app.py         # GUI 入口
+│   │   ├── main_window.py # 主窗口（运行配置仪表盘）
+│   │   ├── settings.py    # 设置对话框（服务器/权重/参数）
+│   │   ├── history.py     # 优选历史窗口（Tab 化分析中心）
+│   │   ├── progress_panel.py  # 进度面板
+│   │   ├── worker.py      # 测量 Worker（QThread 异步执行）
+│   │   └── runner_config.py   # 配置 Signal 桩（UI 双向绑定）
+│   ├── cli.py             # CLI 入口（Typer + Rich）
+│   ├── runner.py          # 测量编排器（阶段调度）
+│   ├── resolver.py        # DNS 解析矩阵（有界工作池 + 多协议）
+│   ├── ipprobe.py         # IP 链路探测（TCP/ICMP/跳数/traceroute）
+│   ├── scorer.py          # 评分引擎（分组打分 + 结论判定）
+│   ├── discover.py        # 域名发现器（浏览器历史/种子库/在线）
+│   ├── api_discovery.py   # API 域名自动发现（HTML + crt.sh）
+│   ├── geoip.py           # GeoIP 归属地解析
+│   ├── builtin.py         # 内置 DNS 服务器 + 探测域名
+│   ├── config.py          # 配置加载/持久化
+│   ├── models.py          # 数据模型（纯数据容器）
+│   ├── store.py           # SQLite 结果存储
+│   ├── domain_store.py    # 域名数据库
+│   ├── relation_store.py  # 域名关联关系存储
+│   └── log.py             # 全局日志管理（RotatingFile + Qt Signal）
+├── resources/
+│   ├── servers.toml       # 内置 DNS 服务器清单
+│   └── seed_domains.txt   # 种子域名列表（首次运行写入 SQLite）
+├── tests/                 # 单元测试（pytest）
+├── doc/                   # 设计文档
+├── scripts/               # 辅助脚本
+└── pyproject.toml         # 项目元数据与依赖
 ```
 
-核心引擎零 GUI 依赖，CLI 与 GUI 共用同一套。
+---
 
-## 开发
+## 运行测试
 
 ```bash
-uv run pytest
-uv run ruff check src tests scripts
-uv run python scripts/smoke.py     # 真实网络小样本端到端
-
-# 需要更精确的归属地时，装可选依赖并指定 mmdb
-uv sync --extra geoip
-dnspick run --geoip-db /path/to/City.mmdb
+uv run pytest tests/ -v
 ```
+
+## 代码检查
+
+```bash
+uv run ruff check
+uv run ruff check --fix
+```
+
+---
+
+## 许可证
+
+MIT

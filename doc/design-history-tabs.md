@@ -181,10 +181,12 @@ QFrame 子类，作为 `QListWidget.setItemWidget()` 的自定义条目。
 
 ### 导出 SmartDNS
 
-遍历 `self._scores`，生成 `smartdns-servers.conf`：
+仅导出**推荐（recommend）**的 DNS 服务器，受当前筛选条件和表格排序影响：
+- 遍历筛选后的可见推荐项，按表格当前排序生成 `smartdns-servers.conf`
 - 按 `地址+协议` 去重
 - 协议映射：`udp→udp, tcp→tcp, dot→tls, doh→https`
 - 命名规则：`{vendor}_{proto}` 或 `{server_name}`
+- 不推荐/备用/限定/避免的服务器不会被导出
 
 ## 文件结构
 

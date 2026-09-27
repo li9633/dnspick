@@ -62,7 +62,7 @@ producer ──put──→ Queue(maxsize=N×4) ──→ worker[0..N-1] ──�
 
 ### 4.1 ECS 对比阶段并行化（收益极小）
 
-当前 B2 阶段逐个 server 串行执行：
+当前 ECS 对比阶段逐个 server 串行执行：
 
 ```python
 for server in servers:          # 50 台 server 串行
@@ -89,37 +89,36 @@ for server, pairs in zip(servers, results_list):
 ```
 Runner.run()
 │
-├─ A1  环境探测        串行 ─ 1 次 HTTP 请求
-├─ A2  域名收集        串行 ─ 1 条 SQL 查询
-├─ A3  API发现         并行 ─ asyncio.gather(每个主域名独立发现)
+├─ 1. 环境探测       串行 ─ 1 次 HTTP 请求（出口公网 IP / ECS 子网）
+├─ 2. 域名收集       串行 ─ 从 DomainStore 加载启用的域名
+├─ 3. API发现        并行 ─ asyncio.gather(每个主域名独立发现)
 │
-├─ B1  DNS解析 ─────── 并行 ─ 有界工作池
+├─ 4. DNS解析 ─────── 并行 ─ 有界工作池
 │   │   producer: round-robin 投喂
 │   │   workers: N 个，共享 Queue
 │   │   cancel: cancel producer + N worker + drain queue
 │   │
-│   ├─ B1.1  主域名解析 ── 同上
-│   └─ B1.2  劫持探针   ── 同上
+│   ├─ 4.1  主域名解析 ── 同上
+│   └─ 4.2  劫持探针   ── 同上
 │
-├─ B2  ECS对比        串行 ─ 逐个 server 对比（可并行优化）
+├─ 5. ECS对比        串行 ─ 逐个 server 对比（可并行优化）
 │
-├─ B3   IP探测
-│   ├─ B3a TCP探测     并行 ─ as_completed / worker pool
-│   └─ B3b ICMP探测    并行 ─ as_completed / worker pool（线程池）
+├─ 6. TCP探测        并行 ─ worker pool / as_completed
+├─ 7. ICMP探测       并行 ─ ThreadPoolExecutor
 │
-├─ B4   归属地         串行 ─ 单次 GeoIP 批量查询
-└─ B5   评分           串行 ─ 纯 CPU 计算
+├─ 8. 归属地         串行 ─ 单次 GeoIP 批量查询
+└─ 9. 评分           串行 ─ 纯 CPU 计算
 ```
 
 ### 阶段间依赖
 
 ```
-A1 → A2 → A3 → B1 → B2 → B3a → B3b → B4 → B5
-        ↑     │     │     │
-        │     │     │     └── B2 需要 B1 的结果
-        │     │     └── B1 需要 A3 的完整域名列表
-        │     └── A3 需要 A2 的主域名列表
-        └── A2 不依赖 A1（但 A1 先跑是为了 ECS 子网推断）
+1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9
+      ↑     │     │     │
+      │     │     │     └── 5 需要 4 的结果
+      │     │     └── 4 需要 3 的完整域名列表
+      │     └── 3 需要 2 的主域名列表
+      └── 2 不依赖 1（但 1 先跑是为了 ECS 子网推断）
 ```
 
 所有阶段间都是严格串行的——这是数据依赖决定的，不可改变。
@@ -183,10 +182,10 @@ A1 → A2 → A3 → B1 → B2 → B3a → B3b → B4 → B5
 
 | 阶段 | 跳过方式 | 进度面板表现 |
 |---|---|---|
-| A3 API发现 | `if/else → _skip_stage("API发现")` | 显示 "API发现 · 已跳过" |
-| B2 ECS对比 | `if/else → _skip_stage("ECS 对比")` | 显示 "ECS 对比 · 已跳过" |
-| B3b ICMP探测 | `_skip_stage("ICMP 探测", ...)` 在 `prober.run()` 后显式调用 | ✓ "ICMP 与 traceroute 均未启用" |
-| B3b 深 traceroute | `_run_blocking()` 内 `if` 判 | **静默消失**（不显示） |
+| 3. API发现 | `if/else → _skip_stage("API发现")` | 显示 "API发现 · 已跳过" |
+| 5. ECS对比 | `if/else → _skip_stage("ECS 对比")` | 显示 "ECS 对比 · 已跳过" |
+| 7. ICMP探测 | `_skip_stage("ICMP 探测", ...)` 在 `prober.run()` 后显式调用 | ✓ "ICMP 与 traceroute 均未启用" |
+| 7. 深 traceroute | `_run_blocking()` 内 `if` 判 | **静默消失**（不显示） |
 
 ICMP 阶段已修复为显式跳过。深 traceroute 作为 ICMP 阶段内的子步骤，不启用时不会单独产生阶段提示（合理行为，因为 traceroute 不是一个独立阶段）。
 
@@ -210,7 +209,7 @@ ICMP 阶段已修复为显式跳过。深 traceroute 作为 ICMP 阶段内的子
 
 ### 8.3 实现方案（已在 `runner.py` 中完成）
 
-改动集中在 `runner.py` 的 B3 阶段调度逻辑，在 `prober.run()` 之后判断是否需要显式跳过 ICMP 阶段：
+改动集中在 `runner.py` 的阶段调度逻辑，在 `prober.run()` 之后判断是否需要显式跳过 ICMP 阶段：
 
 ```python
 # 在 prober.run() 完成后
@@ -224,7 +223,7 @@ if not t.icmp_enabled and not t.deep_traceroute:
 
 | 位置 | 职责 |
 |---|---|
-| `runner.py` 的 B3 代码块 | 调用 `prober.run()`，处理 IP 探测前/后的阶段切换 |
+| `runner.py` 的探测代码块 | 调用 `prober.run()`，处理 IP 探测前/后的阶段切换 |
 | `ipprobe.py` 的 `on_probe_progress` | 在探测过程中触发 "TCP 探测" → "ICMP 探测" 的切换 |
 
 更好的做法是将阶段切换职责完全收归 Runner：
@@ -241,8 +240,8 @@ if not t.icmp_enabled and not t.deep_traceroute:
 |---|---|---|
 | `resolver.py#_iter_jobs` | for 循环层级交换（server优先 → domain优先） | ✓ 已实现 |
 | `resolver.py#run_probes` | 同上 | ✓ 已实现 |
-| `runner.py#run` (B3 后) | ICMP/深 traceroute 禁用时显式 `_skip_stage()` | ✓ 已实现 |
-| `runner.py#run` (B2) | ECS 对比从串行改为 asyncio.gather | 待实现 |
+| `runner.py#run` (ICMP 后) | ICMP/深 traceroute 禁用时显式 `_skip_stage()` | ✓ 已实现 |
+| `runner.py#run` (ECS) | ECS 对比从串行改为 asyncio.gather | 待实现 |
 | `ipprobe.py` | 专用 ThreadPoolExecutor 替代默认线程池，worker 数与并发对齐 | ✓ 已实现 |
 
 ## 10. 测试验证

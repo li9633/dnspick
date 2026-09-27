@@ -527,39 +527,28 @@ Runner.run()
 
 ---
 
-## 九、Runner 管道重构：收集 → 测量
+## 九、Runner 管道：扁平 9 阶段
 
-### 9.1 两阶段管道
+### 9.1 实际阶段序列
 
 ```
-┌─ 阶段A: 域名收集 (Collect) ─────────────────────────┐
-│                                                      │
-│  A1. 环境探测 (并行)                                  │
-│      ├─ 出口 IP                                      │
-│      └─ ECS 子网                                     │
-│                                                      │
-│  A2. 加载域名 (从 DB)                                 │
-│      └─ DomainStore.get_enabled()                     │
-│                                                      │
-│  A3. API 域名发现 (并发，可选)                         │
-│      ├─ discover_all() — asyncio.gather 并发          │
-│      ├─ 写入 domain_relation 表                      │
-│      └─ 与 A2 域名去重                                │
-│                                                      │
-│  输出: "共收集 N 个域名，开始 DNS 测量"                │
-└──────────────────────────────────────────────────────┘
-         │
-         ▼
-┌─ 阶段B: DNS 测量 (Measure) ─────────────────────────┐
-│                                                      │
-│  B1. DNS 解析矩阵                                    │
-│  B2. IP 链路探测 (TCP/ICMP/Traceroute)               │
-│  B3. GeoIP 归属地                                    │
-│  B4. 评分与结论                                      │
-└──────────────────────────────────────────────────────┘
+Runner.run()
+  │
+  ├── 1. 环境探测（公网IP / ECS子网）
+  ├── 2. 域名收集（DomainStore.get_enabled()）
+  ├── 3. API 域名发现（可选，asyncio.gather 并发）
+  │     ├─ discover_all()
+  │     ├─ 写入 domain_relation 表
+  │     └─ 与已有域名去重
+  ├── 4. DNS 解析矩阵
+  ├── 5. ECS 对比
+  ├── 6. TCP 探测
+  ├── 7. ICMP 探测
+  ├── 8. GeoIP 归属地
+  └── 9. 评分与结论
 ```
 
-### 9.2 Runner 伪代码
+### 9.2 Runner 阶段管理
 
 ```python
 class Runner:
@@ -568,49 +557,39 @@ class Runner:
         self.dom_store = domain_store
 
     async def run(self) -> RunResult:
-        # === 阶段A: 收集 ===
+        self._enter_stage("环境探测")
         public_ip = await self._detect_public_ip()
         ecs = _to_subnet(public_ip) if public_ip and self.cfg.use_ecs else None
 
+        self._enter_stage("域名收集")
         domains = self.dom_store.get_enabled()
 
         if self.cfg.tunables.api_discovery_enabled:
+            self._enter_stage("API发现")
             extra = await self._discover_api_domains(domains)
-            domains = ApiDomainDiscovery.dedup(domains, extra)
+            domains.extend(extra)
+        else:
+            self._skip_stage("API发现")
 
-        self.emit("域名收集", len(domains), len(domains),
-                  f"共 {len(domains)} 个域名，开始 DNS 测量")
-
-        # === 阶段B: 测量 ===
+        self._enter_stage("DNS 解析")
         records = await self._resolve(domains, servers, ecs)
-        probes  = await self._probe(records)
-        geo     = await self._geoip(probes)
-        return self._score(geo)
+        # ... 后续阶段类似 ...
 ```
 
 ---
 
 ## 十、文件改动清单
 
-| 文件 | 改动量 | 说明 |
-|------|--------|------|
-| `src/dnspick/models.py` | **-1 行** | 移除 `DomainSpec.tier` |
-| `src/dnspick/domain_store.py` | **新增 ~200 行** | `DomainStore` 类，管理 `domain` 表 |
-| `src/dnspick/builtin.py` | **~5 行** | 新增 `seed_domains()` 函数，`_DOMAINS` 不变 |
-| `src/dnspick/config.py` | **~30 行** | 移除 `max_tier`、`domains`、`disabled_domains`；`save()`/`load_saved()` 简化；移除 `load_config(domains_file)` 中域名 TOML 解析；`active_domains()` 移除 |
-| `src/dnspick/runner.py` | **~30 行** | 重构为收集→测量两阶段；接入 `DomainStore`；API 发现提前 |
-| `src/dnspick/cli.py` | **~15 行** | 移除 `--tier`/`--domains` 参数；适配新 Runner 接口 |
-| `src/dnspick/api_discovery.py` | **~2 行** | 移除 `to_domain_specs` 中的 `tier=1` |
-| `src/dnspick/discover.py` | **~5 行** | `write_toml()` 不再输出 tier |
-| `src/dnspick/gui/main_window.py` | **~15 行** | 移除 tier 统计；"管理域名…" 按钮打开 DomainManagerDialog；传入 DomainStore |
-| `src/dnspick/gui/domain_manager.py` | **新增 ~450 行** | 完整对话框实现 |
-| `tests/test_domain_store.py` | **新增 ~120 行** | DomainStore 单元测试 |
-| `tests/test_domain_manager.py` | **新增 ~150 行** | 对话框单元测试 |
-| `tests/test_discover.py` | **~5 行** | 更新 tier 相关断言 |
-| `tests/test_runner.py` | **~10 行** | 适配新 Runner 接口 |
-| `scripts/smoke.py` | **~5 行** | 适配新 Config 接口 |
-
-**总计：新增 ~920 行，修改 ~110 行。**
+| 文件 | 改动量 | 说明 | 状态 |
+|------|--------|------|------|
+| `src/dnspick/models.py` | **已修改** | 移除 `DomainSpec.tier` | ✓ 已实现 |
+| `src/dnspick/domain_store.py` | **新增 ~200 行** | `DomainStore` 类，管理 `domain` 表 | ✓ 已实现 |
+| `src/dnspick/builtin.py` | **已修改** | 新增 `seed_domains()` 函数 | ✓ 已实现 |
+| `src/dnspick/config.py` | **已修改** | 移除 `max_tier`、`domains`、`disabled_domains` | ✓ 已实现 |
+| `src/dnspick/runner.py` | **已修改** | 扁平9阶段序列；接入 `DomainStore` | ✓ 已实现 |
+| `src/dnspick/cli.py` | **已修改** | 移除 `--tier`/`--domains` 参数 | ✓ 已实现 |
+| `src/dnspick/gui/main_window.py` | **已修改** | 移除 tier 统计；"管理域名…" 打开 DomainManagerDialog | ✓ 已实现 |
+| `src/dnspick/gui/domain_manager.py` | **新增 ~450 行** | 完整对话框实现 | ✓ 已实现 |
 
 ---
 

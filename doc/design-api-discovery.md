@@ -112,48 +112,45 @@ graph TD
 
 ### 3.1 整体时序
 
-Runner 采用**两阶段管道**：收集 → 测量。API 域名发现在"收集阶段"的最后一步执行。
+Runner 采用**扁平 9 阶段**架构，API 域名发现在第 3 阶段执行：
 
 ```
 Runner.run() 启动测量
   │
-  ├─ 阶段A: 域名收集（Collect）
-  │   │
-  │   ├── A1. 环境探测（公网IP / ECS子网）
-  │   │
-  │   ├── A2. 加载域名集（从 DomainStore 加载所有 enabled=1 的域名）
-  │   │
-  │   ├── A3. API 域名发现（如果 api_discovery_enabled = true）
-  │   │   │
-  │   │   for each 已启用主域名 (asyncio.gather 并发):
-  │   │   │
-  │   │   ├── ① 查缓存
-  │   │   │   SELECT * FROM domain_relation
-  │   │   │   WHERE main_domain = 'www.bilibili.com'
-  │   │   │   AND last_seen_at > datetime('now', '-7 days')
-  │   │   │
-  │   │   │   ├─ 有 ≥ 3 条缓存 → 用缓存，跳过发现
-  │   │   │   └─ 缓存不足 → 执行发现
-  │   │   │
-  │   │   ├── ② 策略1：HTML 抓取  (timeout: 5s)
-  │   │   │   GET https://www.bilibili.com/
-  │   │   │   解析 HTML → 提取外部域名集合 A
-  │   │   │   写入 domain_relation（UPSERT）
-  │   │   │
-  │   │   ├── ③ 策略2：证书透明度  (timeout: 8s)
-  │   │   │   GET https://crt.sh/?q=%.bilibili.com&output=json
-  │   │   │   解析 JSON → 提取子域名集合 B
-  │   │   │   写入 domain_relation（UPSERT）
-  │   │   │
-  │   │   └── ④ 合并 A ∪ B，返回域名列表
-  │   │
-  │   └── A4. 全局去重（与 A2 域名合并，按优先级去重）
+  ├── 1. 环境探测（公网IP / ECS子网）
   │
-  ├─ 阶段B: DNS 测量（Measure）
-  │   ├── B1. DNS 解析矩阵（N 个域名 × S 台服务器）
-  │   ├── B2. IP 链路探测（TCP/ICMP/Traceroute）
-  │   ├── B3. GeoIP 归属地查询
-  │   └── B4. 评分与结论
+  ├── 2. 域名收集（从 DomainStore 加载所有 enabled=1 的域名）
+  │
+  ├── 3. API 域名发现（如果 api_discovery_enabled = true）
+  │   │
+  │   for each 已启用主域名 (asyncio.gather 并发):
+  │   │
+  │   ├── ① 查缓存
+  │   │   SELECT * FROM domain_relation
+  │   │   WHERE main_domain = 'www.bilibili.com'
+  │   │   AND last_seen_at > datetime('now', '-7 days')
+  │   │
+  │   │   ├─ 有 ≥ 3 条缓存 → 用缓存，跳过发现
+  │   │   └─ 缓存不足 → 执行发现
+  │   │
+  │   ├── ② 策略1：HTML 抓取  (timeout: 5s)
+  │   │   GET https://www.bilibili.com/
+  │   │   解析 HTML → 提取外部域名集合 A
+  │   │   写入 domain_relation（UPSERT）
+  │   │
+  │   ├── ③ 策略2：证书透明度  (timeout: 8s)
+  │   │   GET https://crt.sh/?q=%.bilibili.com&output=json
+  │   │   解析 JSON → 提取子域名集合 B
+  │   │   写入 domain_relation（UPSERT）
+  │   │
+  │   └── ④ 合并 A ∪ B，返回域名列表，与已有域名去重后附加
+  │
+  ├── 4. DNS 解析（N 个域名 × S 台服务器 + 劫持探针）
+  ├── 5. ECS 对比（可选，逐个 server 对比）
+  ├── 6. TCP 探测（多端口握手，取 p50 延迟）
+  ├── 7. ICMP 探测（系统 ping，线程池并发）
+  ├── 8. 归属地（GeoIP 批量查询）
+  └── 9. 评分（分组打分 + 综合结论）
 ```
 
 ### 3.2 策略 1：HTML 抓取
@@ -307,7 +304,7 @@ www.google.com  (Group.GLOBAL)
 
 ## 六、Runner 集成点
 
-`runner.py` 采用两阶段管道（收集 → 测量），API 发现在"收集阶段"执行：
+`runner.py` 在扁平阶段序列的第 3 步执行 API 发现：
 
 ```python
 class Runner:
@@ -316,37 +313,31 @@ class Runner:
         self.dom_store = domain_store
 
     async def run(self) -> RunResult:
-        # === 阶段A: 域名收集 ===
+        # 阶段 1: 环境探测
+        self._enter_stage("环境探测")
         public_ip = await self._detect_public_ip()
         ecs = _to_subnet(public_ip) if public_ip and self.cfg.use_ecs else None
 
-        # 从数据库加载所有启用的域名
+        # 阶段 2: 域名收集
+        self._enter_stage("域名收集")
         domains = self.dom_store.get_enabled()
 
-        # API 域名发现（可选）
+        # 阶段 3: API 域名发现（可选）
         if self.cfg.tunables.api_discovery_enabled:
-            discovery = ApiDomainDiscovery(
-                cache_days=t.api_discovery_cache_days,
-                html_timeout=t.api_discovery_html_timeout,
-                crt_timeout=t.api_discovery_crt_timeout,
-                max_per_source=t.api_discovery_max_per_source,
-                min_cache=t.api_discovery_min_cache,
-            )
-            # 并发发现所有主域名的关联域名
+            self._enter_stage("API发现")
+            discovery = ApiDomainDiscovery(...)
             related_map = await discovery.discover_all(
                 [d.name for d in domains]
             )
-            # 与已有域名去重，生成 DomainSpec 并附加
             extra = ApiDomainDiscovery.to_domain_specs(related_map, domains)
-            domains = ApiDomainDiscovery.dedup(domains, extra)
-            summary.api_discovered = len(extra)
+            domains.extend(extra)
+        else:
+            self._skip_stage("API发现")
 
-        self.emit("域名收集", len(domains), len(domains),
-                  f"共 {len(domains)} 个域名，开始 DNS 测量")
-
-        # === 阶段B: DNS 测量 ===
+        # 阶段 4: DNS 解析
+        self._enter_stage("DNS 解析")
         records = await self._resolve(domains, servers, ecs)
-        # ... 后续步骤不变
+        # ... 后续阶段 ...
 ```
 
 ---
@@ -367,20 +358,20 @@ class Runner:
 
 ## 八、文件改动清单
 
-| 文件 | 改动量 | 说明 |
-|------|--------|------|
-| `src/dnspick/api_discovery.py` | **新增** ~410行 | HTML抓取 + crt.sh 查询 + 域名校验 + DomainSpec 生成 |
-| `src/dnspick/relation_store.py` | **新增** ~180行 | domain_relation 表的建表、CRUD、缓存查询、正反向查找 |
-| `src/dnspick/domain_store.py` | **新增** ~200行 | domain 主表管理，域名统一存储（种子、自定义、历史） |
-| `src/dnspick/config.py` | **+6 字段，移除 domains/disabled_domains 持久化** | Tunables 加 6 个配置项；域名不再由 Config 管理 |
-| `src/dnspick/runner.py` | **+~30行** | 重构为收集→测量两阶段管道；接入 DomainStore |
-| `src/dnspick/scorer.py` | **不动** | 关联域名已带正确 Group，自动参与评分 |
-| `src/dnspick/store.py` | **不动** | 完全独立 |
-| `src/dnspick/models.py` | **不动** | DomainSpec 已有所有必需字段 |
-| `tests/test_api_discovery.py` | **新增** ~265行 | 24 个单元测试：域名校验、URL提取、HTML/crt.sh解析、CRUD |
-| `scripts/discover_bilibili.py` | **新增** ~100行 | www.bilibili.com 真实网络测试脚本 |
+| 文件 | 改动量 | 说明 | 状态 |
+|------|--------|------|------|
+| `src/dnspick/api_discovery.py` | **新增** ~410行 | HTML抓取 + crt.sh 查询 + 域名校验 + DomainSpec 生成 | ✓ 已实现 |
+| `src/dnspick/relation_store.py` | **新增** ~180行 | domain_relation 表的建表、CRUD、缓存查询、正反向查找 | ✓ 已实现 |
+| `src/dnspick/domain_store.py` | **新增** ~200行 | domain 主表管理，域名统一存储（种子、自定义、历史） | ✓ 已实现 |
+| `src/dnspick/config.py` | **已修改** | Tunables 加 6 个配置项；域名不再由 Config 管理 | ✓ 已实现 |
+| `src/dnspick/runner.py` | **已修改** | 扁平9阶段序列；API发现在阶段3执行；接入 DomainStore | ✓ 已实现 |
+| `src/dnspick/scorer.py` | **不动** | 关联域名已带正确 Group，自动参与评分 | — |
+| `src/dnspick/store.py` | **不动** | 完全独立 | — |
+| `src/dnspick/models.py` | **已修改** | DomainSpec 已移除 tier 字段 | ✓ 已实现 |
+| `tests/test_api_discovery.py` | **新增** ~265行 | 24 个单元测试 | ✓ 已实现 |
+| `scripts/discover_bilibili.py` | **新增** ~100行 | 真实网络测试脚本 | ✓ 已实现 |
 
-**总计：新增 ~955 行，修改 ~20 行。**
+**总计：已全部实现。**
 
 ---
 

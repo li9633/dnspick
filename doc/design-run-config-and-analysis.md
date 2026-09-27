@@ -5,6 +5,19 @@
 将当前 `MainWindow`（主窗口）和 `HistoryWindow`（历史窗口）的职责重新划分，
 使每个窗口只承担单一职责。同时增强历史分析窗口的"厂商 × 协议"对比推荐能力。
 
+> **实现状态**（2026-09）：
+>
+> **已实现：**
+> - `DnsServer` 已添加 `vendor` 字段，`server_score` 表已添加 `vendor` 列
+> - MainWindow 已改造：协议分布卡片（UDP/TCP/DoT/DoH）、域名摘要、进度面板、实时日志
+> - HistoryWindow 已实现 Tab 化（结果总览 / 分组对比 / 分析建议）和 `_MultiSelectCombo` 筛选
+> - 4 种分组模式已全部实现（厂商→协议 / 协议→地区 / 厂商→结论 / 协议→厂商）
+> - `ScoreFilter.vendors` 字段已添加并生效
+>
+> **尚未实现：**
+> - HistoryWindow 上方的「厂商协议推荐摘要卡片」未实现（厂商筛选下拉框隐藏在动态数据加载后，替代了设计中的卡片区）
+> - SettingsDialog 的服务器管理未按 vendor 分组显示（当前仍为平铺表格）
+
 ## 一、当前状态分析
 
 ### 1.1 当前窗口职责
@@ -26,7 +39,8 @@ class DnsServer:
     name: str
     address: str
     protocol: Protocol
-    region: str
+    vendor: str = ""  # 厂商标识，如 "alibaba", "tencent", "cloudflare"
+    region: str = "unknown"
     port: int = 53
     hostname: str | None = None
     tags: tuple[str, ...] = ()
@@ -67,11 +81,11 @@ dns_rtt_p50_ms, hijack, ecs_supported, polluted
 
 ---
 
-## 三、数据模型变更
+## 三、数据模型变更（已实现）
 
 ### 3.1 DnsServer 新增 `vendor` 字段
 
-在 `DnsServer` 中增加 `vendor` 字段，用于标识厂商，替代当前 `_generate_advice` 中靠 `server_id.rsplit("-", 1)[0]` 的隐式推断。
+已在 `DnsServer` 中增加 `vendor` 字段，用于标识厂商，替代原来靠 `server_id.rsplit("-", 1)[0]` 的隐式推断。
 
 ```python
 @dataclass(frozen=True)
@@ -118,7 +132,7 @@ ALTER TABLE server_score ADD COLUMN vendor TEXT NOT NULL DEFAULT '';
 
 ---
 
-## 四、MainWindow 改造方案
+## 四、MainWindow 改造方案（已实现）
 
 ### 4.1 布局
 
@@ -192,7 +206,10 @@ ALTER TABLE server_score ADD COLUMN vendor TEXT NOT NULL DEFAULT '';
 
 ---
 
-## 五、HistoryWindow 增强方案
+## 五、HistoryWindow 增强方案（部分实现）
+
+> **已实现**：Tab 化布局、`_MultiSelectCombo` 筛选、4 种分组模式、ScoreFilter vendors 字段。
+> **未实现**：厂商协议推荐摘要卡片、分数区间滑块；厂商筛选使用下拉框替代设计中的多选框。
 
 ### 5.1 整体布局（改造后）
 
@@ -377,7 +394,9 @@ class ScoreFilter:
 
 ---
 
-## 六、SettingsDialog 改动
+## 六、SettingsDialog 改动（未实现）
+
+> SettingsDialog 的服务器管理当前仍为平铺表格，未按 vendor 分组显示。
 
 ### 6.1 服务器管理标签页增强
 
@@ -406,19 +425,19 @@ MainWindow 中的 **"管理服务器…"** 按钮 → 直接打开 SettingsDialo
 
 ## 七、实施步骤
 
-| 阶段 | 步骤 | 内容 | 影响文件 |
-|------|------|------|---------|
-| **阶段 1** | 1.1 | `DnsServer` 模型新增 `vendor` 字段 | `models.py` |
-|          | 1.2 | 更新内置服务器列表，填充 vendor | `builtin.py` |
-|          | 1.3 | `server_score` 表新增 `vendor` 列 + `ScoreFilter` 新增 `vendors` | `store.py` |
-| **阶段 2** | 2.1 | MainWindow 构建协议分布卡片，替换完整表格 | `main_window.py` |
-|          | 2.2 | MainWindow 新增"管理服务器…"按钮 → Settings | `main_window.py` |
-|          | 2.3 | Settings 服务器标签页显示优化 | `settings.py` |
-| **阶段 3** | 3.1 | `store.py` 新增 `vendor_protocol_summary()` | `store.py` |
-|          | 3.2 | `store.py` 的 `compare()` 支持 `vendor` 分组 | `store.py` |
-| **阶段 4** | 4.1 | HistoryWindow 新增"厂商协议推荐"摘要卡片 | `history.py` |
-|          | 4.2 | HistoryWindow 筛选面板新增厂商 + 分数滑块 | `history.py` |
-|          | 4.3 | HistoryWindow 新增两种视图模式 | `history.py` |
+| 阶段 | 步骤 | 内容 | 状态 |
+|------|------|------|------|
+| **阶段 1** | 1.1 | `DnsServer` 模型新增 `vendor` 字段 | ✓ 已实现 |
+|          | 1.2 | 更新内置服务器列表，填充 vendor | ✓ 已实现 |
+|          | 1.3 | `server_score` 表新增 `vendor` 列 + `ScoreFilter` 新增 `vendors` | ✓ 已实现 |
+| **阶段 2** | 2.1 | MainWindow 构建协议分布卡片，替换完整表格 | ✓ 已实现 |
+|          | 2.2 | MainWindow 新增"管理服务器…"按钮 → Settings | ✓ 已实现 |
+|          | 2.3 | Settings 服务器标签页显示优化 | 未实现 |
+| **阶段 3** | 3.1 | `store.py` 新增 `vendor_protocol_summary()` | 未实现 |
+|          | 3.2 | `store.py` 的 `compare()` 支持 `vendor` 分组 | ✓ 已实现 |
+| **阶段 4** | 4.1 | HistoryWindow 新增"厂商协议推荐"摘要卡片 | 未实现 |
+|          | 4.2 | HistoryWindow 筛选面板新增厂商 + 分数滑块 | 部分实现 |
+|          | 4.3 | HistoryWindow 新增两种视图模式 | ✓ 已实现 |
 
 ---
 
